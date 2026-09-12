@@ -688,6 +688,7 @@
     /* ---- 8-bit 号码机 ---- */
     .reel-machine { width: min(420px, 100%); margin: 16px auto 6px; padding: 14px; border: 4px solid var(--ink); border-radius: 18px;
       background: linear-gradient(180deg, #4c78ff 0%, #284cbd 100%); box-shadow: 7px 8px 0 rgba(24,49,83,.35); text-align: center; }
+    .reel-machine.penalty { background: linear-gradient(180deg, #ff7b6b 0%, #c9352a 100%); }
     .reel-head { margin-bottom: 10px; color: #fff; font-weight: 1000; letter-spacing: .16em; font-size: .82rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
     .reel-window { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 92px; padding: 10px 14px;
       border: 4px solid var(--ink); border-radius: 12px; background: #14142a; box-shadow: inset 0 0 22px rgba(255,232,115,.22); }
@@ -1008,8 +1009,10 @@
         return a === b ? `第${a}天` : `第${a}–${b}天`;
       };
       const REPORT_SECONDS = 30;
-      const PHASE_SECONDS = { walk: 30, question: 60, 'category-choice': 45, cards: 45, decision: 45, fishing: 45, ninja: 55 };
-      const MINIGAME_FROM_SESSION = 3;
+      const PHASE_SECONDS = { walk: 30, question: 60, 'category-choice': 45, cards: 45, decision: 45, fishing: 45, ninja: 35 };
+      // 第几轮结束后插哪个小游戏（其余轮次直接进商店）
+      const MINIGAME_SCHEDULE = { 3: 'fishing', 4: 'ninja', 5: 'fishing' };
+      const POTION_LIMIT = 2;
 
       const jobs = [
         {
@@ -1183,7 +1186,7 @@
         shopOpeningMoney: START_MONEY, pendingLedger: [],
         walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
         wheelRotation: 0, wheelSpinning: false,
-        fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null, lastFishKey: 'minnow',
+        fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null, lastFishKey: 'minnow', potionsThisShop: 0, penaltyPulled: false,
         ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
       };
 
@@ -1869,11 +1872,10 @@
         state.shopOpeningMoney = state.money;
         state.pendingLedger = [];
         state.wheelSpinning = false;
-        if (state.session >= MINIGAME_FROM_SESSION) {
-          if (state.session % 2 === 1) renderFishing();
-          else renderNinja();
-          return;
-        }
+        state.potionsThisShop = 0;
+        const game = MINIGAME_SCHEDULE[state.session];
+        if (game === 'fishing') { renderFishing(); return; }
+        if (game === 'ninja') { renderNinja(); return; }
         renderShop();
       }
 
@@ -2047,24 +2049,102 @@
 
       function answerFishingTotal(value, button) {
         if (state.phase !== 'fishing-sum') return;
-        state.phase = 'fishing-result';
         stopPhaseTimer('🎣');
         const total = fishingTotal();
         const correct = value === total;
         stage.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
         if (button) button.classList.add(correct ? 'correct' : 'wrong');
-        const maxPenalty = Math.max(3, 15 - state.luckLevel * 2);
-        const penalty = -(1 + Math.floor(Math.random() * maxPenalty));
-        if (correct) { awardMiniGame(5, '钓号码：算对奖金'); playFanfare(); }
-        else { awardMiniGame(penalty, '钓号码：算错赔钱'); playLoss(); }
+
+        if (correct) {
+          state.phase = 'fishing-result';
+          awardMiniGame(5, '钓号码：算对奖金');
+          playFanfare();
+          const fb = $('#feedback');
+          if (fb) {
+            fb.className = 'feedback success';
+            fb.innerHTML = `算对了！${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}，拿到 5金币。`;
+          }
+          queueTransition(leaveMiniGame, 3200, 'fishing-result');
+          return;
+        }
+
+        playResult(false);
+        queueTransition(renderPenaltyReel, 1600, 'fishing-sum');
         const fb = $('#feedback');
         if (fb) {
-          fb.className = `feedback ${correct ? 'success' : 'error'}`;
-          fb.innerHTML = correct
-            ? `算对了！${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}，拿到 5金币。`
-            : `正确答案是 ${mathNumber(total)}：${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}。这次赔了 ${Math.abs(penalty)}金币。${numberLineHTML(total)}`;
+          fb.className = 'feedback error';
+          fb.innerHTML = `正确答案是 ${mathNumber(total)}：${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}。${numberLineHTML(total)}`;
         }
-        queueTransition(leaveMiniGame, 3800, 'fishing-result');
+      }
+
+      function renderPenaltyReel() {
+        if (state.phase !== 'fishing-sum') return;
+        state.phase = 'fishing-penalty';
+        state.penaltyPulled = false;
+        state.reelValue = 0;
+        renderPenaltyStage();
+      }
+
+      function renderPenaltyStage() {
+        const maxPenalty = Math.max(3, 15 - state.luckLevel * 2);
+        stage.innerHTML = `
+          <div class="stage-kicker">😬 算错了 · 拉杆看赔多少</div>
+          <h2 class="stage-title">拉一下号码机，看这次要赔多少金币</h2>
+          <p class="stage-text">算错就要赔钱，赔多少由号码机决定：这次最多赔 ${maxPenalty} 金币${state.luckLevel > 0 ? `（幸运 ${state.luckLevel} 级已经帮你压低了上限）` : ''}。</p>
+          <div class="reel-machine penalty">
+            <div class="reel-head">赔 钱 号 码 机</div>
+            <div class="reel-window ${state.fishCasting ? 'spinning' : ''}" id="reelWindow">
+              ${state.fishCasting || state.penaltyPulled ? pixelNumber(state.reelValue) : '<span class="reel-idle">- -</span>'}
+            </div>
+          </div>
+          <div class="net-row">
+            <button id="penaltyBtn" class="primary-btn" type="button" style="grid-column:auto; min-width:220px" ${state.fishCasting || state.penaltyPulled ? 'disabled' : ''}>
+              ${state.fishCasting ? '转动中…' : state.penaltyPulled ? '已经赔了' : '😖 拉杆'}
+            </button>
+          </div>
+          <div id="feedback" class="feedback">深呼吸，拉杆吧。</div>`;
+        const btn = $('#penaltyBtn');
+        if (btn) btn.addEventListener('click', pullPenalty);
+      }
+
+      function pullPenalty() {
+        if (state.phase !== 'fishing-penalty' || state.fishCasting) return;
+        state.fishCasting = true;
+        const maxPenalty = Math.max(3, 15 - state.luckLevel * 2);
+        const finalValue = -(1 + Math.floor(Math.random() * maxPenalty));
+        renderPenaltyStage();
+        let ticks = 0;
+        const totalTicks = 24;
+        const spin = () => {
+          if (state.phase !== 'fishing-penalty') return;
+          ticks += 1;
+          const done = ticks >= totalTicks;
+          state.reelValue = done ? finalValue : -(1 + Math.floor(Math.random() * maxPenalty));
+          const win = $('#reelWindow');
+          if (win) win.innerHTML = pixelNumber(state.reelValue);
+          tone(done ? 180 : 520 + (ticks % 4) * 60, 0, .04, 'square', .028);
+          if (done) { settlePenalty(finalValue); return; }
+          const t = ticks / totalTicks;
+          state.reelTimer = setTimeout(spin, 45 + t * t * t * 340);
+        };
+        spin();
+      }
+
+      function settlePenalty(penalty) {
+        state.fishCasting = false;
+        state.penaltyPulled = true;
+        state.phase = 'fishing-result';
+        awardMiniGame(penalty, '钓号码：算错赔钱');
+        playLoss();
+        renderPenaltyStage();
+        const win = $('#reelWindow');
+        if (win) win.innerHTML = pixelNumber(penalty);
+        const fb = $('#feedback');
+        if (fb) {
+          fb.className = 'feedback error';
+          fb.innerHTML = `号码机停在 <strong>${mathNumber(penalty)}</strong>，这次赔了 ${Math.abs(penalty)} 金币。下次算仔细一点！`;
+        }
+        queueTransition(leaveMiniGame, 3200, 'fishing-result');
       }
 
       function fishingTimeout() {
@@ -2079,8 +2159,8 @@
       /* ================= 🍉 水果忍者：五场，每场目标不同 ================= */
 
       const FRUIT_KEYS = ['melon', 'apple', 'orange', 'banana', 'berry'];
-      const NINJA_ROUNDS = 5;
-      const NINJA_ROUND_MS = 9000;
+      const NINJA_ROUNDS = 2;
+      const NINJA_ROUND_MS = 11000;
 
       function makeNinjaEquation(wantAnswer, targetAnswer) {
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -2108,8 +2188,8 @@
         }
         stage.innerHTML = `
           <div class="stage-kicker">🍉 休息一下 · 水果忍者</div>
-          <h2 class="stage-title">五场挑战，每场要切的答案都不同！</h2>
-          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。每场 9 秒，看清楚目标再下手。</p>
+          <h2 class="stage-title">两场挑战，每场要切的答案都不同！</h2>
+          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。每场 11 秒，看清楚目标再下手。</p>
           <div class="ninja-head">
             <div class="mini-target"><span id="ninjaRoundLabel">第 1 / ${NINJA_ROUNDS} 场 · 只切答案 =</span><strong id="ninjaTargetLabel">?</strong></div>
             <div class="ninja-pips" id="ninjaPips"></div>
@@ -2138,7 +2218,7 @@
         if (field) field.innerHTML = '';
         tone(660, 0, .12, 'triangle', .04, 990);
         clearInterval(state.ninjaSpawnId);
-        state.ninjaSpawnId = setInterval(spawnFruit, 1150);
+        state.ninjaSpawnId = setInterval(spawnFruit, 1450);
         spawnFruit();
         clearTimeout(state.ninjaRoundId);
         state.ninjaRoundId = setTimeout(() => {
@@ -2162,7 +2242,7 @@
         btn.innerHTML = `${pixelSprite(key, 'sprite fruit-sprite')}<span class="fruit-eq">${eq.text}</span>`;
         const leftPct = 6 + Math.random() * 74;
         const rise = Math.round(190 + Math.random() * 110);
-        const dur = (4.2 + Math.random() * 1.2).toFixed(2);
+        const dur = (5.6 + Math.random() * 1.6).toFixed(2);
         btn.style.left = `${leftPct}%`;
         btn.style.setProperty('--rise', `${rise}px`);
         btn.style.setProperty('--dur', `${dur}s`);
@@ -2213,7 +2293,7 @@
         if (fb) {
           fb.className = `feedback ${earned > 0 ? 'success' : earned < 0 ? 'error' : ''}`;
           fb.textContent = earned > 0
-            ? `${early ? '提前收手，' : '五场结束！'}切对${state.ninjaHits}个、切错${state.ninjaMiss}个，赚到 ${cash(earned)}。`
+            ? `${early ? '提前收手，' : '两场结束！'}切对${state.ninjaHits}个、切错${state.ninjaMiss}个，赚到 ${cash(earned)}。`
             : earned < 0
               ? `切错太多了：切对${state.ninjaHits}个、切错${state.ninjaMiss}个，倒扣 ${cash(Math.abs(earned))}。下次看清楚目标再切。`
               : '这次没切中任何水果，没赚也没亏。';
@@ -2224,7 +2304,7 @@
       }
 
       function leaveMiniGame() {
-        if (!['fishing', 'fishing-sum', 'fishing-result', 'ninja', 'ninja-result'].includes(state.phase)) return;
+        if (!['fishing', 'fishing-sum', 'fishing-penalty', 'fishing-result', 'ninja', 'ninja-result'].includes(state.phase)) return;
         clearTimeout(state.reelTimer);
         state.reelTimer = null;
         clearInterval(state.ninjaSpawnId);
@@ -2256,7 +2336,8 @@
           <h2 class="stage-title">要不要为下一轮添购道具？</h2>
           <p class="stage-text">现在手上有 ${cash(state.money)}。买东西时时间是停止的，可以慢慢想。${hasDiscount ? '实习生特权：所有道具已经打8折。' : ''}</p>
           <div class="shop-grid">${shopItems.map(item => {
-            const owned = !item.repeat && state.activeEffects[item.id];
+            const maxed = item.id === 'luckPotion' && state.potionsThisShop >= POTION_LIMIT;
+            const owned = maxed || (!item.repeat && state.activeEffects[item.id]);
             const price = itemPrice(item);
             const afford = state.money >= price;
             const owns = item.id === 'luckPotion' ? state.luckLevel : 0;
@@ -2265,7 +2346,7 @@
               <div class="shop-info">
                 <div class="shop-head"><strong class="shop-name">${item.name}</strong><span class="shop-tag">${item.tag}</span></div>
                 <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前 +${owns * 5}%</strong>` : ''}</p>
-                <button class="shop-buy" type="button" data-id="${item.id}" ${owned || !afford ? 'disabled' : ''}>${owned ? '已购买 ✓' : `买 ${cash(price)}${hasDiscount ? `（原价${item.price}）` : ''}`}</button>
+                <button class="shop-buy" type="button" data-id="${item.id}" ${owned || !afford ? 'disabled' : ''}>${maxed ? `本轮已买满 ${POTION_LIMIT} 瓶` : owned ? '已购买 ✓' : `买 ${cash(price)}${hasDiscount ? `（原价${item.price}）` : ''}`}</button>
               </div>
             </div>`;
           }).join('')}</div>
@@ -2283,11 +2364,12 @@
         const item = shopItems.find(i => i.id === id);
         if (!item) return;
         if (!item.repeat && state.activeEffects[item.id]) return;
+        if (item.id === 'luckPotion' && state.potionsThisShop >= POTION_LIMIT) { toast(`这一轮最多只能买 ${POTION_LIMIT} 瓶药水。`); return; }
         const price = itemPrice(item);
         if (state.money < price) { toast('金币不够，买不起这个道具。'); return; }
         const before = state.money;
         state.money -= price;
-        if (item.id === 'luckPotion') state.luckLevel += 1;
+        if (item.id === 'luckPotion') { state.luckLevel += 1; state.potionsThisShop += 1; }
         else state.activeEffects[item.id] = true;
         state.pendingLedger.push({ label: `商店购买：${item.name}`, value: -price, equation: `${cash(before)} − ${price}金币 = ${cash(state.money)}` });
         updateHUD();
