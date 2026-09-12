@@ -505,10 +505,9 @@
       color: white;
     }
 
-    .card-back-icon { font-size: 3rem; }
-    .card-back-text { margin-top: 6px; font-weight: 1000; }
-    .card-back-legend { display: grid; gap: 4px; margin-top: 12px; }
-    .legend-chip { padding: 3px 8px; border: 2px solid var(--ink); border-radius: 999px; font-size: .66rem; font-weight: 1000; white-space: nowrap; }
+    .card-back-icon { font-size: 3.8rem; }
+    .card-back-text { margin-top: 8px; font-weight: 1000; }
+    .legend-chip { padding: 3px 9px; border: 2px solid var(--ink); border-radius: 999px; font-size: .7rem; font-weight: 1000; white-space: nowrap; }
     .legend-chip.common { background: #eef2f8; color: #5b6b80; }
     .legend-chip.rare { background: #b9cdff; color: #16307a; }
     .legend-chip.legendary { background: #ffd75e; color: #7a4a06; }
@@ -1679,7 +1678,7 @@
           <div class="card-grid">${state.cards.map((card, i) => `
             <button class="draw-card" type="button" data-index="${i}" aria-label="翻开第${i + 1}张卡">
               <span class="draw-card-inner">
-                <span class="draw-face card-back"><span class="card-back-icon">❓</span><span class="card-back-text">点击翻卡</span><span class="card-back-legend"><span class="legend-chip common">普通 +2~4</span><span class="legend-chip rare">稀有 +5~7</span><span class="legend-chip legendary">传说 +8~12</span></span></span>
+                <span class="draw-face card-back"><span class="card-back-icon">❓</span><span class="card-back-text">点击翻卡</span></span>
                 <span class="draw-face card-front ${card.rarity ? card.rarity.id : 'bad'}"><span class="card-rarity">${card.rarity ? `${card.rarity.star} ${card.rarity.name}` : '⚠ 扣钱'}</span><span class="card-category">${card.category}${card.boosted ? ' ×1.5' : ''}</span><span class="card-icon">${card.icon}</span><span class="card-title">${card.title}</span><span class="card-copy">${card.text}</span><span class="card-value">${signed(card.amount)}</span><span class="select-card" hidden>选择这张</span></span>
               </span>
             </button>`).join('')}</div>
