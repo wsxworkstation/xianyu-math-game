@@ -505,13 +505,33 @@
       color: white;
     }
 
-    .card-back-icon { font-size: 3.8rem; }
-    .card-back-text { margin-top: 8px; font-weight: 1000; }
+    .card-back-icon { font-size: 3rem; }
+    .card-back-text { margin-top: 6px; font-weight: 1000; }
+    .card-back-legend { display: grid; gap: 4px; margin-top: 12px; }
+    .legend-chip { padding: 3px 8px; border: 2px solid var(--ink); border-radius: 999px; font-size: .66rem; font-weight: 1000; white-space: nowrap; }
+    .legend-chip.common { background: #eef2f8; color: #5b6b80; }
+    .legend-chip.rare { background: #b9cdff; color: #16307a; }
+    .legend-chip.legendary { background: #ffd75e; color: #7a4a06; }
 
     .card-front { transform: rotateY(180deg); background: white; text-align: center; }
     .card-front.good { background: #dff9ef; }
-    .card-front.bad { background: #ffe2df; }
     .card-front.risk { background: #fff2c6; }
+
+    /* 稀有度配色 */
+    .card-front.common { background: linear-gradient(165deg, #f4f7fb 0%, #dde6f1 100%); }
+    .card-front.rare { background: linear-gradient(165deg, #dfe9ff 0%, #b9cdff 100%); box-shadow: 0 0 0 3px #6f93ff inset, 6px 7px 0 rgba(24,49,83,.18); }
+    .card-front.legendary { background: linear-gradient(165deg, #fff3c4 0%, #ffd75e 55%, #ffb638 100%); box-shadow: 0 0 0 3px #f5a623 inset, 6px 7px 0 rgba(24,49,83,.22); animation: legendGlow 1.5s ease-in-out infinite; }
+    @keyframes legendGlow { 50% { box-shadow: 0 0 0 3px #ffe9a3 inset, 0 0 18px rgba(255,196,60,.85), 6px 7px 0 rgba(24,49,83,.22); } }
+    .card-front.bad { background: linear-gradient(165deg, #ffe7e4 0%, #ffc3bd 100%); box-shadow: 0 0 0 3px #ef5b5b inset, 6px 7px 0 rgba(24,49,83,.18); }
+
+    .rarity-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 14px; }
+    .legend-chip.badchip { background: #ffc3bd; color: #8f2323; }
+    .card-rarity { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); padding: 2px 10px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; font-size: .7rem; font-weight: 1000; white-space: nowrap; }
+    .card-front.common .card-rarity { background: #eef2f8; color: #5b6b80; }
+    .card-front.rare .card-rarity { background: #4c78ff; color: #fff; }
+    .card-front.legendary .card-rarity { background: #b5651d; color: #fff5d0; }
+    .card-front.bad .card-rarity { background: var(--red); color: #fff; }
+    .card-front .card-category { margin-top: 22px; }
     .card-category { padding: 4px 8px; border: 2px solid currentColor; border-radius: 4px; font-size: .78rem; font-weight: 1000; }
     .card-icon { font-size: 3rem; }
     .card-title { margin: 10px 0 7px; font-size: 1.15rem; font-weight: 1000; }
@@ -1093,7 +1113,37 @@
         { category: '人情卡', title: '请客庆祝', icon: '🍰', text: '生意不错，你请朋友吃了点心庆祝。', amount: -5, tone: 'bad' },
         { category: '人情卡', title: '帮同学代购', icon: '🛒', text: '你帮同学代购，赚了一点手续费。', amount: 4, tone: 'good' },
         { category: '人情卡', title: '朋友暂时周转不开', icon: '🤝', text: '朋友说下次一定还，你先借出一点现金。', amount: -5, tone: 'bad' },
-        { category: '人情卡', title: '家人给的鼓励金', icon: '🧧', text: '家人看你认真创业，给了一点鼓励金。', amount: 6, tone: 'good' }
+        { category: '人情卡', title: '家人给的鼓励金', icon: '🧧', text: '家人看你认真创业，给了一点鼓励金。', amount: 6, tone: 'good' },
+        { category: '活动卡', title: '校庆义卖摊', icon: '🎊', text: '校庆当天人潮爆满，你的摊位排起长队。', amount: 1, tone: 'good' },
+        { category: '活动卡', title: '社团订便当', icon: '🍱', text: '隔壁社团一口气跟你订了整团的午餐。', amount: 1, tone: 'good' },
+        { category: '活动卡', title: '限时买一送一', icon: '🏷️', text: '你推出买一送一，客人挤满摊位。', amount: 1, tone: 'good' },
+        { category: '活动卡', title: '摊位被安排到角落', icon: '🚪', text: '抽到最角落的位置，几乎没人经过。', amount: -1, tone: 'bad' },
+        { category: '活动卡', title: '音响租金', icon: '🔊', text: '为了吸引人租了音响，结果收入还不够付租金。', amount: -1, tone: 'bad' },
+        { category: '命运卡', title: '捡到钱包归还', icon: '👛', text: '你把捡到的钱包还给失主，对方给了你谢礼。', amount: 1, tone: 'good' },
+        { category: '命运卡', title: '被记者采访', icon: '📰', text: '校刊报导了你的小生意，一堆人跑来光顾。', amount: 1, tone: 'good' },
+        { category: '命运卡', title: '停电半天', icon: '🔌', text: '学校停电，冰箱里的饮料全变温了。', amount: -1, tone: 'bad' },
+        { category: '命运卡', title: '弄丢零钱包', icon: '🕳️', text: '零钱包不见了，怎么找都找不到。', amount: -1, tone: 'bad' },
+        { category: '命运卡', title: '被老师表扬', icon: '🎖️', text: '你的创业计划被拿去当示范，学校给了奖励。', amount: 1, tone: 'good' },
+        { category: '工作卡', title: '顶班救急', icon: '🆘', text: '同事临时请假，你顶了他的班拿到加班费。', amount: 1, tone: 'good' },
+        { category: '工作卡', title: '被客人指定服务', icon: '🙋', text: '老顾客指名要你服务，老板给了奖励。', amount: 1, tone: 'good' },
+        { category: '工作卡', title: '打破一箱杯子', icon: '💥', text: '搬货时手滑，整箱杯子摔了。', amount: -1, tone: 'bad' },
+        { category: '工作卡', title: '忘记打卡', icon: '🕳️', text: '忘了打卡，这天的工资被扣掉一部分。', amount: -1, tone: 'bad' },
+        { category: '工作卡', title: '月度最佳员工', icon: '🏅', text: '这个月表现最好，拿到额外奖金。', amount: 1, tone: 'good' },
+        { category: '现金卡', title: '旧课本卖掉', icon: '📚', text: '把用不到的旧课本卖给学弟妹。', amount: 1, tone: 'good' },
+        { category: '现金卡', title: '中了小额抽奖', icon: '🎫', text: '便利店的集点抽奖，你抽中了一张现金券。', amount: 1, tone: 'good' },
+        { category: '现金卡', title: '手机掉进水里', icon: '💧', text: '手机进水送修，维修费不便宜。', amount: -1, tone: 'bad' },
+        { category: '现金卡', title: '交通罚单', icon: '🚫', text: '脚车乱停被开罚单。', amount: -1, tone: 'bad' },
+        { category: '现金卡', title: '押金退回', icon: '🔑', text: '之前租摊位的押金退回来了。', amount: 1, tone: 'good' },
+        { category: '科技卡', title: '短影片爆红', icon: '🔥', text: '你拍的开箱影片突然爆红，订单涌进来。', amount: 1, tone: 'good' },
+        { category: '科技卡', title: '接到网红合作', icon: '🤳', text: '小网红愿意帮你宣传，换来一波新客。', amount: 1, tone: 'good' },
+        { category: '科技卡', title: '被平台扣广告费', icon: '📉', text: '广告投放没效果，钱都花掉了。', amount: -1, tone: 'bad' },
+        { category: '科技卡', title: '电脑中毒', icon: '🦠', text: '电脑中毒，资料要花钱救回来。', amount: -1, tone: 'bad' },
+        { category: '科技卡', title: '线上课程学到新招', icon: '🎧', text: '看了免费教学，成本压低了不少。', amount: 1, tone: 'good' },
+        { category: '人情卡', title: '亲戚介绍大单', icon: '👨‍👩‍👧', text: '亲戚公司办活动，把订单交给你。', amount: 1, tone: 'good' },
+        { category: '人情卡', title: '同学帮忙送货', icon: '🚲', text: '同学免费帮你送货，省下一笔车费。', amount: 1, tone: 'good' },
+        { category: '人情卡', title: '被放鸽子', icon: '🕊️', text: '说好来帮忙的人没出现，你只好花钱请人。', amount: -1, tone: 'bad' },
+        { category: '人情卡', title: '借出去的钱要不回', icon: '💸', text: '借给朋友的钱，对方一直拖着不还。', amount: -1, tone: 'bad' },
+        { category: '人情卡', title: '老师买单', icon: '☕', text: '老师看你辛苦，把你的货全买下来分给同学。', amount: 1, tone: 'good' }
       ];
 
       const cardCategories = [
@@ -1567,6 +1617,7 @@
           <div class="stage-kicker">${state.answerCorrect ? '🎯 答对奖励' : '🎴 答错也能选牌'}</div>
           <h2 class="stage-title">选择你想抽的卡牌类型</h2>
           <p class="stage-text"><span class="chance-badge">好牌率 ${Math.round(chance * 100)}%</span> 你会得到${state.drawChoices}张同类型卡，自己翻开后再选1张。</p>
+          <p class="rarity-legend"><span class="legend-chip common">普通 60% · +2~4</span><span class="legend-chip rare">稀有 30% · +5~7</span><span class="legend-chip legendary">传说 10% · +8~12</span><span class="legend-chip badchip">扣钱 −3~−10</span></p>
           <div class="category-grid">${cardCategories.map(category => `
             <button class="category-btn" type="button" data-category="${category.name}">
               <span class="category-icon" aria-hidden="true">${category.icon}</span>
@@ -1580,6 +1631,16 @@
         startPhaseTimer('category-choice', categoryTimeout);
       }
 
+      const RARITIES = [
+        { id: 'common', name: '普通', star: '★', weight: 60, min: 2, max: 4 },
+        { id: 'rare', name: '稀有', star: '★★', weight: 30, min: 5, max: 7 },
+        { id: 'legendary', name: '传说', star: '★★★', weight: 10, min: 8, max: 12 }
+      ];
+
+      const BAD_RANGE = { min: 3, max: 10 };
+
+      const randBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
       function drawWeightedCards(category, count, goodChance) {
         const pool = normalCards.filter(card => card.category === category);
         const good = shuffle(pool.filter(card => card.amount > 0));
@@ -1589,17 +1650,21 @@
           const wantsGood = Math.random() < goodChance;
           const preferred = wantsGood ? good : bad;
           const fallback = wantsGood ? bad : good;
-          selected.push((preferred.length ? preferred : fallback).shift());
+          const picked = (preferred.length ? preferred : fallback).shift();
+          selected.push(rollCardValue(picked));
         }
-        return selected.map(scaleCard);
+        return selected;
       }
 
-      function scaleCard(card) {
-        const factor = state.session >= 5 ? 1.5 : 1;
+      function rollCardValue(card) {
         const vendorBoost = state.job.trait === 'eventBoost' && card.category === '活动卡' ? 1.5 : 1;
-        const size = Math.round(Math.abs(card.amount) * factor * vendorBoost);
-        const amount = Math.sign(card.amount) * Math.min(15, Math.max(1, size));
-        return { ...card, amount, boosted: vendorBoost > 1 };
+        if (card.amount < 0) {
+          const raw = randBetween(BAD_RANGE.min, BAD_RANGE.max);
+          return { ...card, amount: -Math.round(raw * vendorBoost), rarity: null, boosted: vendorBoost > 1 };
+        }
+        const rarity = pickWeighted(RARITIES);
+        const raw = randBetween(rarity.min, rarity.max);
+        return { ...card, amount: Math.round(raw * vendorBoost), rarity, boosted: vendorBoost > 1 };
       }
 
       function renderCards(count, category = null, goodChance = .50) {
@@ -1614,8 +1679,8 @@
           <div class="card-grid">${state.cards.map((card, i) => `
             <button class="draw-card" type="button" data-index="${i}" aria-label="翻开第${i + 1}张卡">
               <span class="draw-card-inner">
-                <span class="draw-face card-back"><span class="card-back-icon">❓</span><span class="card-back-text">点击翻卡</span></span>
-                <span class="draw-face card-front ${card.tone}"><span class="card-category">${card.category}${card.boosted ? ' ×1.5' : ''}</span><span class="card-icon">${card.icon}</span><span class="card-title">${card.title}</span><span class="card-copy">${card.text}</span><span class="card-value">${signed(card.amount)}</span><span class="select-card" hidden>选择这张</span></span>
+                <span class="draw-face card-back"><span class="card-back-icon">❓</span><span class="card-back-text">点击翻卡</span><span class="card-back-legend"><span class="legend-chip common">普通 +2~4</span><span class="legend-chip rare">稀有 +5~7</span><span class="legend-chip legendary">传说 +8~12</span></span></span>
+                <span class="draw-face card-front ${card.rarity ? card.rarity.id : 'bad'}"><span class="card-rarity">${card.rarity ? `${card.rarity.star} ${card.rarity.name}` : '⚠ 扣钱'}</span><span class="card-category">${card.category}${card.boosted ? ' ×1.5' : ''}</span><span class="card-icon">${card.icon}</span><span class="card-title">${card.title}</span><span class="card-copy">${card.text}</span><span class="card-value">${signed(card.amount)}</span><span class="select-card" hidden>选择这张</span></span>
               </span>
             </button>`).join('')}</div>
           <div id="feedback" class="feedback">请先翻开所有卡片。</div>`;
