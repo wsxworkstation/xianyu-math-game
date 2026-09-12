@@ -664,7 +664,38 @@
     .mini-target strong { font-size: clamp(1.8rem, 5vw, 2.6rem); font-weight: 1000; letter-spacing: -.03em; }
     .mini-score { margin: 10px 0 0; font-weight: 1000; font-size: 1.05rem; text-align: center; }
 
+    .sprite { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+
     /* ---- 钓鱼 ---- */
+    .fish-chart { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 6px; }
+    .fish-chart-item { display: grid; justify-items: center; gap: 2px; min-width: 82px; padding: 8px 6px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; box-shadow: 3px 3px 0 rgba(24,49,83,.14); }
+    .fish-chart-art { width: 58px; height: 44px; }
+    .fish-chart-item strong { font-size: .82rem; }
+    .fish-chart-item span { font-weight: 1000; font-size: .92rem; color: #12805a; }
+    .fish-chart-item span.bad { color: var(--red); }
+    .pond-line { position: absolute; left: 50%; top: 0; width: 3px; height: 0; background: rgba(255,255,255,.85); transform: translateX(-50%); }
+    .pond-line.casting { animation: castLine 1.4s ease-in-out; }
+    @keyframes castLine { 0% { height: 0; } 45% { height: 58%; } 100% { height: 0; } }
+    .pond-catch { position: absolute; left: 50%; top: 42%; width: 128px; height: 96px; transform: translate(-50%, -50%); }
+    .pond-catch.reveal { animation: catchPop .5s cubic-bezier(.2,1.5,.5,1) both; }
+    @keyframes catchPop { from { transform: translate(-50%, 30%) scale(.4); opacity: 0; } to { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+    .basket-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; min-height: 74px; margin-top: 14px; padding: 8px; border: 3px dashed var(--line); border-radius: 14px; }
+    .basket-fish { display: grid; justify-items: center; gap: 0; }
+    .basket-fish .sprite { width: 66px; height: 50px; }
+    .basket-fish span { font-weight: 1000; color: #12805a; }
+    .basket-fish span.bad { color: var(--red); }
+    .basket-empty { color: var(--muted); font-weight: 800; }
+
+    /* ---- 忍者头部 ---- */
+    .ninja-head { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .ninja-pips { display: flex; gap: 6px; }
+    .ninja-pip { display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 5px; border: 2px solid var(--ink); border-radius: 8px; background: #fff; font-weight: 1000; font-size: .82rem; color: var(--muted); }
+    .ninja-pip.now { background: var(--yellow); color: var(--ink); transform: scale(1.12); }
+    .ninja-pip.done { background: #d9faee; color: #12805a; }
+    .fruit-sprite { width: 100%; height: 100%; }
+    .fruit-eq { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); padding: 1px 6px; border: 2px solid var(--ink); border-radius: 8px; background: #fff; color: var(--ink); font-weight: 1000; font-size: .82rem; white-space: nowrap; text-shadow: none; }
+
+    /* ---- 旧钓鱼样式 ---- */
     .pond { position: relative; height: 300px; margin: 10px auto 0; max-width: 620px; border: 3px solid var(--ink); border-radius: 20px; overflow: hidden;
       background: linear-gradient(180deg, #bfe9ff 0%, #7fd0f5 45%, #3fa9dd 100%); box-shadow: inset 0 -10px 24px rgba(6,63,99,.25); }
     .pond::after { content: ""; position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 3px, transparent 3px 26px); opacity: .5; pointer-events: none; }
@@ -685,11 +716,8 @@
       background: linear-gradient(180deg, #2b1a4d 0%, #4a2a6b 55%, #6b3a7a 100%); }
     .ninja-field::after { content: ""; position: absolute; inset: 0; pointer-events: none;
       background-image: radial-gradient(1.5px 1.5px at 20% 25%, rgba(255,255,255,.7) 50%, transparent), radial-gradient(1.5px 1.5px at 68% 16%, rgba(255,255,255,.6) 50%, transparent), radial-gradient(1.5px 1.5px at 84% 52%, rgba(255,255,255,.5) 50%, transparent), radial-gradient(1.5px 1.5px at 38% 66%, rgba(255,255,255,.55) 50%, transparent); }
-    .fruit { position: absolute; bottom: -80px; display: grid; place-items: center; width: 78px; height: 78px; padding: 0;
-      border: 3px solid var(--ink); border-radius: 50%; background: #ff7b7b; color: #fff; font-weight: 1000; font-size: 1.05rem;
-      cursor: pointer; box-shadow: 3px 4px 0 rgba(0,0,0,.35); text-shadow: 0 2px 0 rgba(0,0,0,.35); }
-    .fruit.v1 { background: #ff7b7b; } .fruit.v2 { background: #5ad1a0; } .fruit.v3 { background: #ffc247; color: var(--ink); text-shadow: none; }
-    .fruit.v4 { background: #7aa6ff; } .fruit.v5 { background: #d68bff; }
+    .fruit { position: absolute; bottom: -90px; display: block; width: 86px; height: 86px; padding: 0;
+      border: 0; background: none; cursor: pointer; filter: drop-shadow(3px 4px 0 rgba(0,0,0,.35)); }
     .fruit { animation: fruitFly var(--dur, 2.8s) cubic-bezier(.33,.02,.67,.98) forwards; }
     @keyframes fruitFly {
       0% { transform: translateY(0) rotate(0deg); }
@@ -989,15 +1017,10 @@
       ];
 
       const shopItems = [
-        { id: 'luckyCharm', name: '幸运符', icon: '🍀', price: 6, tag: '抽卡加成', desc: '下一轮抽卡「好牌率」+25%（最高100%）。' },
-        { id: 'retryTicket', name: '二次挑战券', icon: '🔁', price: 5, tag: '学习机会', desc: '下一轮数学题答错时，可以再挑战一次。' },
-        { id: 'safetyBox', name: '安全网', icon: '🛟', price: 7, tag: '风险保护', desc: '下一轮结束时若现金仍是负数，系统退还5金币。' },
-        { id: 'overtimePay', name: '加班津贴', icon: '⏳', price: 6, tag: '额外收入', desc: '下一轮固定收入直接+5金币。' },
-        { id: 'scamTip', name: '防骗提示卡', icon: '🔍', price: 4, tag: '风险保护', desc: '下一轮如果出现可疑情境，会先看到一条提示线索。' },
-        { id: 'extraTime', name: '时间加长券', icon: '⏱️', price: 3, tag: '时间', desc: '下一轮答题时间 +20秒，思考更从容。' },
-        { id: 'carUpgrade', name: '交通工具', icon: '🚗', price: 5, tag: '走路去工作', desc: '下一轮直接开车上班，免走数字线也保证准时、领全额收入。' },
-        { id: 'scamShield', name: '防诈盾', icon: '🛡️', price: 6, tag: '风险保护', desc: '下一轮如果误信骗局导致亏钱，系统帮你挡下这一次损失。' },
-        { id: 'incomeDouble', name: '收入加倍券', icon: '💰', price: 8, tag: '风险玩法', desc: '下一轮结束时，本轮总盈亏直接乘以2（亏钱也会双倍，请谨慎使用）。' }
+        { id: 'doubleNext', name: '加倍券', icon: '✖️', price: 8, tag: '只在下一轮', repeat: false,
+          desc: '下一轮结束时，本轮总盈亏 ×2。赚钱变双倍，亏钱也会变双倍——敢不敢用？' },
+        { id: 'luckPotion', name: '幸运药水', icon: '🧪', price: 10, tag: '永久生效', repeat: true,
+          desc: '永久提升幸运值：之后每一轮抽卡的好牌率 +6%。可以重复购买，一瓶一瓶叠上去。' }
       ];
 
       const wheelSegments = [
@@ -1006,9 +1029,9 @@
         { label: '+10金币', icon: '💵', angle: 112.5, weight: 20, cash: 10 },
         { label: '−10金币', icon: '📉', angle: 157.5, weight: 8, cash: -10 },
         { label: '+20金币', icon: '💸', angle: 202.5, weight: 14, cash: 20 },
-        { label: '免费幸运符', wheelText: '幸运符', icon: '🍀', angle: 247.5, weight: 5, grantEffect: 'luckyCharm' },
+        { label: '免费幸运药水', wheelText: '药水', icon: '🧪', angle: 247.5, weight: 5, grantLuck: 1 },
         { label: '+50金币大奖', wheelText: '50金币', icon: '🎉', angle: 292.5, weight: 3, cash: 50 },
-        { label: '免费挑战券', wheelText: '挑战券', icon: '🔁', angle: 337.5, weight: 4, grantEffect: 'retryTicket' }
+        { label: '免费加倍券', wheelText: '加倍券', icon: '✖️', angle: 337.5, weight: 4, grantEffect: 'doubleNext' }
       ];
 
       const normalCards = [
@@ -1086,12 +1109,12 @@
         timer: 0, timerId: null, reportTimerId: null, transitionTimerId: null, reportSeconds: REPORT_SECONDS,
         sessionStartMoney: START_MONEY, ledger: [], sound: true, audio: null, musicTimer: null,
         drawChoices: 1, answerCorrect: false, selectedCategory: null,
-        activeEffects: { luckyCharm: false, retryTicket: false, safetyBox: false, overtimePay: false, scamTip: false, extraTime: false, carUpgrade: false, scamShield: false, incomeDouble: false },
+        activeEffects: { doubleNext: false }, luckLevel: 0,
         shopOpeningMoney: START_MONEY, pendingLedger: [],
         walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
         wheelRotation: 0, wheelSpinning: false,
-        fishing: null, fishingPicked: [],
-        ninjaTarget: 0, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
+        fishCaught: [], fishCastsLeft: 0, fishCasting: false,
+        ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
       };
 
       const $ = (selector) => document.querySelector(selector);
@@ -1103,7 +1126,7 @@
       const cash = (n) => n < 0 ? `−${Math.abs(n)}金币` : `${n}金币`;
       const mathNumber = (n) => n < 0 ? `−${Math.abs(n)}` : n;
       const operatorNumber = (n) => n < 0 ? `(−${Math.abs(n)})` : n;
-      const boostedChance = (base) => Math.min(1, base + (state.activeEffects.luckyCharm ? .25 : 0));
+      const boostedChance = (base) => Math.min(1, base + state.luckLevel * .06);
       const randomStep = (range = 5) => { let s = 0; while (s === 0) s = Math.floor(Math.random() * (range * 2 + 1)) - range; return s; };
       const walkStepLabel = (n) => n < 0 ? `退${Math.abs(n)}步（−${Math.abs(n)}）` : `进${n}步（+${n}）`;
 
@@ -1335,7 +1358,6 @@
       function startPhaseTimer(phaseKey, onExpire) {
         clearInterval(state.timerId);
         let seconds = PHASE_SECONDS[phaseKey] || 30;
-        if (phaseKey === 'question' && state.activeEffects.extraTime) seconds += 20;
         state.timer = seconds;
         setTimerText();
         state.timerId = setInterval(() => {
@@ -1470,7 +1492,7 @@
         state.question = makeQuestion();
         const q = state.question;
         const diff = difficultyInfo();
-        const retryNote = state.activeEffects.retryTicket ? '本轮持有「二次挑战券」，答错还能再试一次！' : '本轮只有一次回答机会。';
+        const retryNote = '每题只有一次机会。';
         stage.innerHTML = `
           <div class="stage-kicker">🧠 本轮数学挑战 · 难度 ${diff.stars} ${diff.name}</div>
           <h2 class="stage-title">认真算一算！</h2>
@@ -1493,16 +1515,6 @@
         const isCorrect = value === q.answer;
         button.disabled = true;
         button.classList.add(isCorrect ? 'correct' : 'wrong');
-
-        const canRetry = !isCorrect && state.attempts === 1 && state.activeEffects.retryTicket;
-        if (canRetry) {
-          state.activeEffects.retryTicket = false;
-          renderActiveEffects();
-          playResult(false);
-          $('#feedback').className = 'feedback error';
-          $('#feedback').textContent = '答错了，不过你有「二次挑战券」！再试一次，其他选项还能选。';
-          return;
-        }
 
         stage.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
         stopPhaseTimer('✅');
@@ -1660,7 +1672,6 @@
             <div>
               <h3 class="decision-title">${item.title}</h3>
               <p class="stage-text">${item.text}</p>
-              ${state.activeEffects.scamTip ? `<p class="scam-hint">🔍 提示线索：${item.hint}</p>` : ''}
               <div class="decision-actions">
                 <button class="choice-btn trust" type="button" data-choice="trust">相信并参加</button>
                 <button class="choice-btn refuse" type="button" data-choice="refuse">拒绝，不参加</button>
@@ -1680,13 +1691,7 @@
         let amount = trusted ? d.trust : d.refuse;
         const correctDecision = trusted === d.safe;
         if (!d.safe && !trusted) state.avoided += 1;
-        let shieldUsed = false;
-        if (trusted && !d.safe && amount < 0 && state.activeEffects.scamShield) {
-          shieldUsed = true;
-          state.activeEffects.scamShield = false;
-          renderActiveEffects();
-          amount = 0;
-        }
+        const shieldUsed = false;
         const before = state.money;
         state.money += amount;
         state.ledger.push({ label: `${d.title}：${trusted ? '相信' : '拒绝'}${shieldUsed ? '（防诈盾生效）' : ''}`, value: amount, equation: amount ? `${cash(before)} ${amount >= 0 ? '+' : '−'} ${Math.abs(amount)}金币 = ${cash(state.money)}` : '现金没有变化' });
@@ -1710,7 +1715,7 @@
         state.phase = 'report';
         const latePenalty = state.job.trait === 'lateShield' ? .25 : .5;
         const baseIncome = state.walkOnTime ? state.job.income : Math.round(state.job.income * (1 - latePenalty));
-        const overtimeBonus = state.activeEffects.overtimePay ? 5 : 0;
+        const overtimeBonus = 0;
         const totalIncome = baseIncome + overtimeBonus;
         const beforeIncome = state.money;
         state.money += totalIncome;
@@ -1722,16 +1727,11 @@
         const beforeExpense = state.money;
         state.money -= state.job.expense;
         state.ledger.push({ label: `${state.job.name}固定开销`, value: -state.job.expense, equation: `${cash(beforeExpense)} − ${state.job.expense}金币 = ${cash(state.money)}` });
-        if (state.activeEffects.safetyBox && state.money < 0) {
-          const beforeSafety = state.money;
-          state.money += 5;
-          state.ledger.push({ label: '安全网道具生效', value: 5, equation: `${cash(beforeSafety)} + 5金币 = ${cash(state.money)}` });
-        }
-        if (state.activeEffects.incomeDouble) {
+        if (state.activeEffects.doubleNext) {
           const delta = state.money - state.sessionStartMoney;
           const beforeDouble = state.money;
           state.money += delta;
-          state.ledger.push({ label: '收入加倍券生效（本轮盈亏 ×2）', value: delta, equation: `${cash(beforeDouble)} ${delta >= 0 ? '+' : '−'} ${Math.abs(delta)}金币 = ${cash(state.money)}` });
+          state.ledger.push({ label: '加倍券生效（本轮盈亏 ×2）', value: delta, equation: `${cash(beforeDouble)} ${delta >= 0 ? '+' : '−'} ${Math.abs(delta)}金币 = ${cash(state.money)}` });
         }
         updateHUD();
         noteNegative(beforeExpense, state.money);
@@ -1780,7 +1780,7 @@
       }
 
       function beginInterlude() {
-        state.activeEffects = { luckyCharm: false, retryTicket: false, safetyBox: false, overtimePay: false, scamTip: false, extraTime: false, carUpgrade: false, scamShield: false, incomeDouble: false };
+        state.activeEffects = { doubleNext: false };
         state.shopOpeningMoney = state.money;
         state.pendingLedger = [];
         state.wheelSpinning = false;
@@ -1801,109 +1801,188 @@
         flashDelta(amount);
       }
 
-      /* ================= 🎣 钓鱼：捞出总和等于目标的鱼 ================= */
+      const SPRITES = {
+        minnow: { g: ['...o......oooo..','..oao....oaaaao.','..oaao..ooaaaaao','..oaaaooaaaaaaaa','.oaaaaoaaaaaaaaa','oaaaaaoaaaaaawka','oaaaaaobbbbbbwkb','.oaaaaobbbbbbbbb','..oaaaoobbbbbbbb','..oaao..oobbbbbo','..oao.....oobbo.','...o........oo..'], p: { o:'#10243d',a:'#57b8ff',b:'#2b7fd4',w:'#ffffff',k:'#10243d',s:'#bfe6ff' } },
+        salted: { g: ['...o......oooo..','..oao....oaaaao.','..oaao..ooaaaaao','..oaaaooaaaaaaaa','.oaaaaoaaaaaaaaa','oaaaaaoaaaaaakka','oaaaaaobbbbbbkkb','.oaaaaobbbbbbbbb','..oaaaoobbbbbbbb','..oaao..oobbbbbo','..oao.....oobbo.','...o........oo..'], p: { o:'#2e1c10',a:'#c58b4e',b:'#8d5a2b',w:'#ffffff',k:'#2e1c10',s:'#e8c79a' } },
+        grouper: { g: ['...o......oooo..','..oao....oaaaao.','..oaao..ooaaaaao','..oaaaooaaaaaaaa','.oaaaaoasaaasaaa','oaaaaaoaaaaaawka','oaaaaaobbbbsbwkb','.oaaaaosbbbbbbbb','..oaaaoobbbbbbbb','..oaao..oobbbbbo','..oao.....oobbo.','...o........oo..'], p: { o:'#10301f',a:'#5fbf7d',b:'#2f8a52',w:'#ffffff',k:'#10301f',s:'#1d5c38' } },
+        golden: { g: ['...o......oooo..','..oao....oaaaao.','..oaao..ooaaaaao','..oaaaooawaaaaaa','.oaaaaoaaaaaaaaa','oaaaaaoaaaaaawka','oaaaaaobwbbbbwkb','.oaaaaobbbbbbbbb','..oaaaoobbbbwbbb','..oaao..oobbbbbo','..oao.....oobbo.','...o........oo..'], p: { o:'#4a3505',a:'#ffd454',b:'#e0a21a',w:'#fff6c2',k:'#4a3505',s:'#fff6c2' } },
+        boot: { g: ['...ooooooo......','..obbbbbbbo.....','..obbbbbbbo.....','...oaaaaao......','...oaawaao......','...oaaaaao......','...oaawaao......','...oaaaaaooooo..','..oaaaaaaaaaaao.','..oaaaaaaaaaaao.','..obbbbbbbbbbbo.','...ooooooooooo..'], p: { o:'#2a2320',a:'#7a6a5f',b:'#4f443c',w:'#c9bcb0',k:'#2a2320',s:'#9c8d80' } },
+        melon: { g: ['.oooooooooooo.','oaaaaaaaaaaaao','oaaaaaaaaaaaao','oaaaaaaaaaaaao','oaaaaaaakaaaao','oaaaakaaaaaaao','obakaaaaaaaabo','obaaaaaaaakabo','.obaaakaaaabo.','.obaaaaaaaabo.','..obaaaaaabo..','..obbbaabbbo..','...obbbbbbo...','....oobboo....'], p: { o:'#173a1c',a:'#ff5d6c',b:'#3fa34d',w:'#ffd4d8',k:'#2a1a1a',s:'#fff' } },
+        apple: { g: ['.......ooo....','......okbbo...','......okobo...','....oooooo....','...oaaaaaao...','..oaawaaaaao..','.oaawaaaaaaao.','.oaaaaaaaaaao.','oaaaaaaaaaaaao','.oaaaaaaaaaao.','.oaaaaaaaaaao.','..oaaaaaaaao..','...oaaaaaao...','....oooooo....'], p: { o:'#4a1113',a:'#ef3b3b',b:'#3fa34d',w:'#ffb3b3',k:'#5a3a1a',s:'#fff' } },
+        orange: { g: ['......oo......','.....obbo.....','....oookoo....','...oaaaaaao...','..oaawaaaaao..','.oaawaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','..oaaaaaaaao..','...oaaaaaao...','....oooooo....'], p: { o:'#6a3200',a:'#ff9f1c',b:'#3fa34d',w:'#ffd79a',k:'#5a3a1a',s:'#fff' } },
+        banana: { g: ['...o..........','..oko.........','.oaako........','.oaaao........','.oaaao........','.oaaabo.......','..oaaabo......','..oaaaaboo....','...oaaaabboo..','....oaaaaabbo.','.....oaaaaabbo','......obbbbbko','.......ooobbbo','..........ooo.'], p: { o:'#5c4a10',a:'#ffd93d',b:'#d9a520',w:'#fff3b0',k:'#5c4a10',s:'#fff' } },
+        berry: { g: ['......oo......','...ooobboo....','.oobbbbbbboo..','oaaaaaaaaaaao.','oaaaaaaaaaaao.','.oaaaaaaaaao..','.oaaawaaaaao..','..oaaaaawao...','..oawaaaaao...','...oaawaao....','...oaaawao....','....oaaao.....','....oaaao.....','.....ooo......'], p: { o:'#5a0f1e',a:'#f0334f',b:'#3fa34d',w:'#ffe066',k:'#5a0f1e',s:'#fff' } }
+      };
 
-      function buildFishingRound() {
-        const hard = state.session >= 5;
-        const span = hard ? 9 : 6;
-        const values = [];
-        while (values.length < 6) {
-          let v = Math.floor(Math.random() * (span * 2 + 1)) - span;
-          if (v === 0) continue;
-          values.push(v);
+      function pixelSprite(key, cls) {
+        const sp = SPRITES[key];
+        if (!sp) return '';
+        const h = sp.g.length, w = sp.g[0].length;
+        let rects = '';
+        for (let y = 0; y < h; y += 1) {
+          let x = 0;
+          while (x < w) {
+            const ch = sp.g[y][x];
+            if (ch === '.') { x += 1; continue; }
+            let run = 1;
+            while (x + run < w && sp.g[y][x + run] === ch) run += 1;
+            rects += `<rect x="${x}" y="${y}" width="${run}" height="1" fill="${sp.p[ch]}"/>`;
+            x += run;
+          }
         }
-        const pickCount = hard ? 3 : 2;
-        const idx = shuffle(values.map((_, i) => i)).slice(0, pickCount);
-        const target = idx.reduce((sum, i) => sum + values[i], 0);
-        return { values, target, solution: idx.map(i => values[i]) };
+        return `<svg class="${cls || 'sprite'}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
       }
+
+      /* ================= 🎣 钓鱼：抛竿三次，算出总收获 ================= */
+
+      const FISH_TYPES = [
+        { key: 'minnow',  name: '小鱼仔',  value: 2,   weight: 32, note: '最常见的小杂鱼' },
+        { key: 'salted',  name: '咸鱼',    value: 4,   weight: 26, note: '晒干了一样能卖' },
+        { key: 'boot',    name: '破靴子',  value: -3,  weight: 18, note: '钓到垃圾，还要付钱丢掉' },
+        { key: 'grouper', name: '石斑鱼',  value: 8,   weight: 17, note: '好货，餐厅抢着要' },
+        { key: 'golden',  name: '黄金鱼',  value: 20,  weight: 7,  note: '传说中的大奖！' }
+      ];
+
+      const FISH_CASTS = 3;
 
       function renderFishing() {
         state.phase = 'fishing';
-        state.fishing = buildFishingRound();
-        state.fishingPicked = [];
+        state.fishCaught = [];
+        state.fishCastsLeft = FISH_CASTS;
+        state.fishCasting = false;
         renderFishingStage();
         startPhaseTimer('fishing', fishingTimeout);
       }
 
       function fishingTotal() {
-        return state.fishingPicked.reduce((sum, i) => sum + state.fishing.values[i], 0);
+        return state.fishCaught.reduce((sum, f) => sum + f.value, 0);
+      }
+
+      function fishingEquation() {
+        if (!state.fishCaught.length) return '还没钓到';
+        return state.fishCaught.map(f => operatorNumber(f.value)).join(' + ') + ' = ' + mathNumber(fishingTotal());
       }
 
       function renderFishingStage() {
-        const { values, target } = state.fishing;
-        const spots = [
-          { left: 6, top: 12 }, { left: 40, top: 6 }, { left: 72, top: 20 },
-          { left: 12, top: 56 }, { left: 44, top: 62 }, { left: 74, top: 50 }
-        ];
+        const left = state.fishCastsLeft;
         stage.innerHTML = `
           <div class="stage-kicker">🎣 休息一下 · 钓鱼时间</div>
-          <h2 class="stage-title">捞出几条鱼，让总和刚好等于目标！</h2>
-          <p class="stage-text">点鱼就是捞起来，再点一次放回去。凑对了按「收网」，可以赚一笔外快。捞错不扣钱，但也拿不到奖金。</p>
-          <div class="mini-target"><span>目标总和</span><strong>${mathNumber(target)}</strong></div>
-          <div class="pond">${values.map((v, i) => `
-            <button class="fish ${v < 0 ? 'negative' : ''} ${state.fishingPicked.includes(i) ? 'caught' : ''}" type="button" data-i="${i}"
-              style="left:${spots[i].left}%; top:${spots[i].top}%; animation-delay:${(i * 0.37).toFixed(2)}s"
-              aria-label="鱼 ${mathNumber(v)}${state.fishingPicked.includes(i) ? '，已捞起' : ''}">
-              <span class="fish-tail" aria-hidden="true"></span>${mathNumber(v)}
-            </button>`).join('')}</div>
-          <p class="mini-score">已捞：${state.fishingPicked.length ? state.fishingPicked.map(i => mathNumber(values[i])).join(' ＋ ') : '还没捞'}　＝　<strong>${mathNumber(fishingTotal())}</strong></p>
-          <div class="net-row">
-            <button id="fishResetBtn" class="choice-btn" type="button">全部放回</button>
-            <button id="fishConfirmBtn" class="primary-btn" type="button" style="grid-column:auto; min-width:200px">🎣 收网</button>
+          <h2 class="stage-title">抛竿 ${FISH_CASTS} 次，看看能钓到什么！</h2>
+          <p class="stage-text">钓到什么鱼全看运气。每种鱼卖的价钱都不一样，钓到破靴子还要倒贴钱。三次钓完，要自己算出一共卖多少。</p>
+          <div class="fish-chart">${FISH_TYPES.map(t => `
+            <div class="fish-chart-item">
+              <div class="fish-chart-art">${pixelSprite(t.key, 'sprite fish-sprite')}</div>
+              <strong>${t.name}</strong>
+              <span class="${t.value < 0 ? 'bad' : ''}">${signed(t.value)}</span>
+            </div>`).join('')}</div>
+          <div class="pond">
+            <div class="pond-line" id="pondLine"></div>
+            <div class="pond-catch" id="pondCatch">${state.fishCasting ? '' : (state.fishCaught.length ? pixelSprite(state.fishCaught[state.fishCaught.length - 1].key, 'sprite catch-sprite') : '')}</div>
           </div>
-          <div id="feedback" class="feedback">提示：想拿到负数总和，就要多捞蓝色的负数鱼。</div>`;
-        stage.querySelectorAll('.fish').forEach(btn => btn.addEventListener('click', () => toggleFish(Number(btn.dataset.i))));
-        $('#fishResetBtn').addEventListener('click', () => { if (state.phase === 'fishing') { state.fishingPicked = []; playStep(0); renderFishingStage(); } });
-        $('#fishConfirmBtn').addEventListener('click', confirmFishing);
+          <div class="basket-row" id="basketRow">${state.fishCaught.map(f => `
+            <div class="basket-fish">
+              ${pixelSprite(f.key, 'sprite basket-sprite')}
+              <span class="${f.value < 0 ? 'bad' : ''}">${signed(f.value)}</span>
+            </div>`).join('') || '<span class="basket-empty">鱼篓还是空的</span>'}</div>
+          <p class="mini-score">鱼篓合计：<strong>${fishingEquation()}</strong></p>
+          <div class="net-row">
+            <button id="castBtn" class="primary-btn" type="button" style="grid-column:auto; min-width:220px" ${left <= 0 || state.fishCasting ? 'disabled' : ''}>
+              ${state.fishCasting ? '收线中…' : `🎣 抛竿（还有 ${left} 次）`}
+            </button>
+          </div>
+          <div id="feedback" class="feedback">${left > 0 ? '按「抛竿」开始钓鱼。' : '三次钓完了，来算算一共卖多少钱。'}</div>`;
+        const btn = $('#castBtn');
+        if (btn) btn.addEventListener('click', castRod);
       }
 
-      function toggleFish(i) {
-        if (state.phase !== 'fishing') return;
-        const at = state.fishingPicked.indexOf(i);
-        if (at >= 0) state.fishingPicked.splice(at, 1);
-        else state.fishingPicked.push(i);
-        noiseBurst(0, .12, .04, 700);
-        tone(at >= 0 ? 320 : 560, 0, .1, 'sine', .03, at >= 0 ? 240 : 760);
+      function castRod() {
+        if (state.phase !== 'fishing' || state.fishCasting || state.fishCastsLeft <= 0) return;
+        state.fishCasting = true;
         renderFishingStage();
+        const line = $('#pondLine');
+        if (line) line.classList.add('casting');
+        noiseBurst(0, .18, .04, 900);
+        tone(320, 0, .18, 'sine', .03, 180);
+        queueTransition(() => {
+          const caught = pickWeighted(FISH_TYPES);
+          state.fishCaught.push(caught);
+          state.fishCastsLeft -= 1;
+          state.fishCasting = false;
+          if (caught.value >= 8) playFanfare();
+          else if (caught.value < 0) playLoss();
+          else playCoin();
+          renderFishingStage();
+          const fb = $('#feedback');
+          if (fb) {
+            fb.className = `feedback ${caught.value < 0 ? 'error' : 'success'}`;
+            fb.innerHTML = `钓到了 <strong>${caught.name}</strong>（${caught.note}）：${signed(caught.value)}`;
+          }
+          const catchBox = $('#pondCatch');
+          if (catchBox) catchBox.classList.add('reveal');
+          if (state.fishCastsLeft <= 0) queueTransition(askFishingTotal, 1500, 'fishing');
+        }, 1400, 'fishing');
       }
 
-      function confirmFishing() {
+      function askFishingTotal() {
         if (state.phase !== 'fishing') return;
-        const { target, solution } = state.fishing;
+        state.phase = 'fishing-sum';
+        stopPhaseTimer('🧮');
         const total = fishingTotal();
-        const win = state.fishingPicked.length > 0 && total === target;
-        finishFishing(win, total, solution);
+        const opts = new Set([total]);
+        const spread = [1, -1, 2, -2, 3, -3, 4, -4];
+        for (const d of shuffle(spread)) { if (opts.size >= 4) break; opts.add(total + d); }
+        stage.innerHTML = `
+          <div class="stage-kicker">🧮 算一算 · 今天钓了多少钱</div>
+          <h2 class="stage-title">三条收获加起来，一共卖多少？</h2>
+          <div class="basket-row">${state.fishCaught.map(f => `
+            <div class="basket-fish">
+              ${pixelSprite(f.key, 'sprite basket-sprite')}
+              <span class="${f.value < 0 ? 'bad' : ''}">${signed(f.value)}</span>
+            </div>`).join('')}</div>
+          <div class="question-box">
+            <p class="equation">${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ?</p>
+            <div class="answers">${shuffle([...opts]).map(v => `<button class="answer-btn" type="button" data-v="${v}">${mathNumber(v)}</button>`).join('')}</div>
+          </div>
+          <div id="feedback" class="feedback">算对了额外加 3 金币奖金。</div>`;
+        stage.querySelectorAll('.answer-btn').forEach(b => b.addEventListener('click', () => answerFishingTotal(Number(b.dataset.v), b)));
+        startPhaseTimer('fishing', () => answerFishingTotal(null, null));
+      }
+
+      function answerFishingTotal(value, button) {
+        if (state.phase !== 'fishing-sum') return;
+        state.phase = 'fishing-result';
+        stopPhaseTimer('🎣');
+        const total = fishingTotal();
+        const correct = value === total;
+        stage.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+        if (button) button.classList.add(correct ? 'correct' : 'wrong');
+        awardMiniGame(total, '钓鱼收获');
+        if (correct) awardMiniGame(3, '钓鱼算账奖金');
+        if (correct) playFanfare(); else playResult(false);
+        const fb = $('#feedback');
+        if (fb) {
+          fb.className = `feedback ${correct ? 'success' : 'error'}`;
+          fb.innerHTML = correct
+            ? `算对了！${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ${mathNumber(total)}，鱼钱 ${cash(total)} 加奖金 3金币。`
+            : `正确答案是 ${mathNumber(total)}：${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ${mathNumber(total)}。鱼钱 ${cash(total)} 照拿，但没有奖金。${numberLineHTML(total)}`;
+        }
+        queueTransition(leaveMiniGame, 3600, 'fishing-result');
       }
 
       function fishingTimeout() {
         if (state.phase !== 'fishing') return;
         toast('钓鱼时间到！');
-        finishFishing(false, fishingTotal(), state.fishing.solution);
-      }
-
-      function finishFishing(win, total, solution) {
+        if (state.fishCaught.length) { askFishingTotal(); return; }
         state.phase = 'fishing-result';
-        stopPhaseTimer(win ? '🎣' : '⏰');
-        const reward = win ? (state.session >= 5 ? 14 : 10) : 0;
-        if (win) { playFanfare(); awardMiniGame(reward, '钓鱼小游戏奖金'); }
-        else playResult(false);
-        stage.querySelectorAll('.fish').forEach(b => { b.disabled = true; });
-        const fb = $('#feedback');
-        if (fb) {
-          fb.className = `feedback ${win ? 'success' : 'error'}`;
-          fb.innerHTML = win
-            ? `太厉害了！总和 ${mathNumber(total)} 刚好等于目标，赚到 ${reward}金币外快。`
-            : `你的总和是 ${mathNumber(total)}，不是目标 ${mathNumber(state.fishing.target)}。其中一种答案是 ${solution.map(mathNumber).join(' ＋ ')} ＝ ${mathNumber(state.fishing.target)}。`;
-        }
-        const confirmBtn = $('#fishConfirmBtn');
-        if (confirmBtn) { confirmBtn.textContent = '去商店 →'; confirmBtn.onclick = leaveMiniGame; }
-        const resetBtn = $('#fishResetBtn');
-        if (resetBtn) resetBtn.disabled = true;
-        queueTransition(leaveMiniGame, 4000, 'fishing-result');
+        stopPhaseTimer('⏰');
+        leaveMiniGame();
       }
 
-      /* ================= 🍉 水果忍者：切掉答案正确的算式 ================= */
+      /* ================= 🍉 水果忍者：五场，每场目标不同 ================= */
+
+      const FRUIT_KEYS = ['melon', 'apple', 'orange', 'banana', 'berry'];
+      const NINJA_ROUNDS = 5;
+      const NINJA_ROUND_MS = 7000;
 
       function makeNinjaEquation(wantAnswer, targetAnswer) {
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -1918,41 +1997,74 @@
 
       function renderNinja() {
         state.phase = 'ninja';
-        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        state.ninjaTarget = (Math.random() < .6 ? -1 : 1) * rand(1, state.session >= 5 ? 9 : 6);
+        state.ninjaRound = 0;
         state.ninjaEarned = 0;
         state.ninjaHits = 0;
         state.ninjaMiss = 0;
+        state.ninjaTargets = [];
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const span = state.session >= 5 ? 9 : 6;
+        while (state.ninjaTargets.length < NINJA_ROUNDS) {
+          const t = (Math.random() < .55 ? -1 : 1) * rand(1, span);
+          if (!state.ninjaTargets.includes(t)) state.ninjaTargets.push(t);
+        }
         stage.innerHTML = `
           <div class="stage-kicker">🍉 休息一下 · 水果忍者</div>
-          <h2 class="stage-title">只切答案等于目标的水果！</h2>
-          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。30秒，手快有手慢无！</p>
-          <div class="mini-target"><span>只切答案 =</span><strong>${mathNumber(state.ninjaTarget)}</strong></div>
+          <h2 class="stage-title">五场挑战，每场要切的答案都不同！</h2>
+          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。每场 7 秒，看清楚目标再下手。</p>
+          <div class="ninja-head">
+            <div class="mini-target"><span id="ninjaRoundLabel">第 1 / ${NINJA_ROUNDS} 场 · 只切答案 =</span><strong id="ninjaTargetLabel">?</strong></div>
+            <div class="ninja-pips" id="ninjaPips"></div>
+          </div>
           <div id="ninjaField" class="ninja-field"></div>
           <p class="mini-score">切对 <strong id="ninjaHits">0</strong>　切错 <strong id="ninjaMiss">0</strong>　本关赚 <strong id="ninjaEarned">0金币</strong></p>
           <div class="net-row"><button id="ninjaSkipBtn" class="choice-btn" type="button">不玩了，提前收手</button></div>
-          <div id="feedback" class="feedback">看清楚再切，切错会扣钱。</div>`;
+          <div id="feedback" class="feedback">准备好了吗？第一场马上开始。</div>`;
         $('#ninjaSkipBtn').addEventListener('click', () => finishNinja(true));
-        clearInterval(state.ninjaSpawnId);
-        state.ninjaSpawnId = setInterval(spawnFruit, 900);
-        spawnFruit();
         startPhaseTimer('ninja', () => finishNinja(false));
+        startNinjaRound();
+      }
+
+      function startNinjaRound() {
+        if (state.phase !== 'ninja') return;
+        state.ninjaRound += 1;
+        if (state.ninjaRound > NINJA_ROUNDS) { finishNinja(false); return; }
+        state.ninjaTarget = state.ninjaTargets[state.ninjaRound - 1];
+        const label = $('#ninjaRoundLabel');
+        const target = $('#ninjaTargetLabel');
+        if (label) label.textContent = `第 ${state.ninjaRound} / ${NINJA_ROUNDS} 场 · 只切答案 =`;
+        if (target) target.textContent = mathNumber(state.ninjaTarget);
+        const pips = $('#ninjaPips');
+        if (pips) pips.innerHTML = state.ninjaTargets.map((t, i) => `<span class="ninja-pip ${i + 1 < state.ninjaRound ? 'done' : i + 1 === state.ninjaRound ? 'now' : ''}">${i + 1 < state.ninjaRound ? mathNumber(t) : '?'}</span>`).join('');
+        const field = $('#ninjaField');
+        if (field) field.innerHTML = '';
+        tone(660, 0, .12, 'triangle', .04, 990);
+        clearInterval(state.ninjaSpawnId);
+        state.ninjaSpawnId = setInterval(spawnFruit, 850);
+        spawnFruit();
+        clearTimeout(state.ninjaRoundId);
+        state.ninjaRoundId = setTimeout(() => {
+          clearInterval(state.ninjaSpawnId);
+          state.ninjaSpawnId = null;
+          startNinjaRound();
+        }, NINJA_ROUND_MS);
       }
 
       function spawnFruit() {
         if (state.phase !== 'ninja') return;
         const field = $('#ninjaField');
         if (!field) return;
-        const good = Math.random() < .35;
+        const good = Math.random() < .38;
         const eq = makeNinjaEquation(good, state.ninjaTarget);
+        const key = FRUIT_KEYS[Math.floor(Math.random() * FRUIT_KEYS.length)];
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `fruit v${1 + Math.floor(Math.random() * 5)}`;
-        btn.textContent = eq.text;
+        btn.className = 'fruit';
         btn.dataset.answer = String(eq.answer);
-        const leftPct = 6 + Math.random() * 76;
-        const rise = Math.round(180 + Math.random() * 110);
-        const dur = (2.4 + Math.random() * .9).toFixed(2);
+        btn.innerHTML = `${pixelSprite(key, 'sprite fruit-sprite')}<span class="fruit-eq">${eq.text}</span>`;
+        const leftPct = 6 + Math.random() * 74;
+        const rise = Math.round(190 + Math.random() * 110);
+        const dur = (2.5 + Math.random() * .9).toFixed(2);
         btn.style.left = `${leftPct}%`;
         btn.style.setProperty('--rise', `${rise}px`);
         btn.style.setProperty('--dur', `${dur}s`);
@@ -1975,7 +2087,7 @@
         pop.textContent = correct ? '+2' : '−1';
         pop.style.color = correct ? '#7cf7c4' : '#ff9a9a';
         pop.style.left = btn.style.left;
-        pop.style.bottom = '40%';
+        pop.style.bottom = '42%';
         const field = $('#ninjaField');
         if (field) { field.appendChild(pop); setTimeout(() => pop.remove(), 700); }
         setTimeout(() => btn.remove(), 320);
@@ -1990,6 +2102,8 @@
         state.phase = 'ninja-result';
         clearInterval(state.ninjaSpawnId);
         state.ninjaSpawnId = null;
+        clearTimeout(state.ninjaRoundId);
+        state.ninjaRoundId = null;
         stopPhaseTimer('🍉');
         const field = $('#ninjaField');
         if (field) field.innerHTML = '';
@@ -2001,10 +2115,10 @@
         if (fb) {
           fb.className = `feedback ${earned > 0 ? 'success' : earned < 0 ? 'error' : ''}`;
           fb.textContent = earned > 0
-            ? `${early ? '提前收手，' : '时间到！'}切对${state.ninjaHits}个、切错${state.ninjaMiss}个，赚到 ${cash(earned)}。`
+            ? `${early ? '提前收手，' : '五场结束！'}切对${state.ninjaHits}个、切错${state.ninjaMiss}个，赚到 ${cash(earned)}。`
             : earned < 0
-              ? `切错太多了：切对${state.ninjaHits}个、切错${state.ninjaMiss}个，倒扣 ${cash(Math.abs(earned))}。下次看清楚再切。`
-              : `这次没切中任何水果，没赚也没亏。`;
+              ? `切错太多了：切对${state.ninjaHits}个、切错${state.ninjaMiss}个，倒扣 ${cash(Math.abs(earned))}。下次看清楚目标再切。`
+              : '这次没切中任何水果，没赚也没亏。';
         }
         const skip = $('#ninjaSkipBtn');
         if (skip) { skip.textContent = '去商店 →'; skip.onclick = leaveMiniGame; }
@@ -2012,9 +2126,11 @@
       }
 
       function leaveMiniGame() {
-        if (!['fishing', 'fishing-result', 'ninja', 'ninja-result'].includes(state.phase)) return;
+        if (!['fishing', 'fishing-sum', 'fishing-result', 'ninja', 'ninja-result'].includes(state.phase)) return;
         clearInterval(state.ninjaSpawnId);
         state.ninjaSpawnId = null;
+        clearTimeout(state.ninjaRoundId);
+        state.ninjaRoundId = null;
         clearTimeout(state.transitionTimerId);
         state.transitionTimerId = null;
         stopPhaseTimer('🛒');
@@ -2040,14 +2156,15 @@
           <h2 class="stage-title">要不要为下一轮添购道具？</h2>
           <p class="stage-text">现在手上有 ${cash(state.money)}。买东西时时间是停止的，可以慢慢想。${hasDiscount ? '实习生特权：所有道具已经打8折。' : ''}</p>
           <div class="shop-grid">${shopItems.map(item => {
-            const owned = state.activeEffects[item.id];
+            const owned = !item.repeat && state.activeEffects[item.id];
             const price = itemPrice(item);
             const afford = state.money >= price;
+            const owns = item.id === 'luckPotion' ? state.luckLevel : 0;
             return `<div class="shop-item ${owned ? 'owned' : ''}">
               <span class="shop-icon" aria-hidden="true">${item.icon}</span>
               <div class="shop-info">
                 <div class="shop-head"><strong class="shop-name">${item.name}</strong><span class="shop-tag">${item.tag}</span></div>
-                <p class="shop-desc">${item.desc}</p>
+                <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前好牌率 +${owns * 6}%</strong>` : ''}</p>
                 <button class="shop-buy" type="button" data-id="${item.id}" ${owned || !afford ? 'disabled' : ''}>${owned ? '已购买 ✓' : `买 ${cash(price)}${hasDiscount ? `（原价${item.price}）` : ''}`}</button>
               </div>
             </div>`;
@@ -2064,16 +2181,18 @@
       function buyShopItem(id) {
         if (state.phase !== 'shop') return;
         const item = shopItems.find(i => i.id === id);
-        if (!item || state.activeEffects[item.id]) return;
+        if (!item) return;
+        if (!item.repeat && state.activeEffects[item.id]) return;
         const price = itemPrice(item);
         if (state.money < price) { toast('金币不够，买不起这个道具。'); return; }
         const before = state.money;
         state.money -= price;
-        state.activeEffects[item.id] = true;
+        if (item.id === 'luckPotion') state.luckLevel += 1;
+        else state.activeEffects[item.id] = true;
         state.pendingLedger.push({ label: `商店购买：${item.name}`, value: -price, equation: `${cash(before)} − ${price}金币 = ${cash(state.money)}` });
         updateHUD();
         flashDelta(-price);
-        toast(`已购买「${item.name}」，下一轮生效！`);
+        toast(item.id === 'luckPotion' ? `喝下幸运药水！幸运值升到 ${state.luckLevel} 级（好牌率 +${state.luckLevel * 6}%）` : `已购买「${item.name}」，下一轮生效！`);
         renderShopStage();
       }
 
@@ -2161,13 +2280,13 @@
         state.wheelSpinning = false;
         const wrap = document.querySelector('.wheel-wrap');
         if (wrap) wrap.classList.remove('spinning');
-        const isBigWin = (seg.cash || 0) >= 20 || Boolean(seg.grantEffect);
+        const isBigWin = (seg.cash || 0) >= 20 || Boolean(seg.grantEffect) || Boolean(seg.grantLuck);
         const isLoss = (seg.cash || 0) < 0;
         const resultBox = $('#wheelResult');
         if (resultBox) {
           resultBox.hidden = false;
           resultBox.className = `wheel-result show ${isLoss ? 'loss' : isBigWin ? 'jackpot' : 'win'}`;
-          resultBox.innerHTML = `<span class="wheel-result-icon">${seg.icon}</span><strong>${seg.label}</strong><span>${seg.grantEffect ? '免费道具，下一轮生效！' : seg.cash ? signed(seg.cash) : '这次没中奖，再试一次？'}</span>`;
+          resultBox.innerHTML = `<span class="wheel-result-icon">${seg.icon}</span><strong>${seg.label}</strong><span>${seg.grantLuck ? '幸运值永久 +1 级！' : seg.grantEffect ? '免费道具，下一轮生效！' : seg.cash ? signed(seg.cash) : '这次没中奖，再试一次？'}</span>`;
         }
         if (typeof seg.cash === 'number' && seg.cash !== 0) {
           const before = state.money;
@@ -2176,13 +2295,17 @@
           updateHUD();
           flashDelta(seg.cash);
         }
+        if (seg.grantLuck) {
+          state.luckLevel += seg.grantLuck;
+          state.pendingLedger.push({ label: `幸运轮盘：${seg.label}`, value: 0, equation: `幸运值升到 ${state.luckLevel} 级` });
+        }
         if (seg.grantEffect) {
           state.activeEffects[seg.grantEffect] = true;
           state.pendingLedger.push({ label: `幸运轮盘：${seg.label}`, value: 0, equation: '获得免费道具，现金不变' });
         }
         if (isBigWin) playFanfare();
         else if (!seg.cash) playResult(false);
-        toast(`轮盘结果：${seg.label}${seg.grantEffect ? '，下一轮生效！' : ''}`);
+        toast(`轮盘结果：${seg.label}${seg.grantLuck ? '，幸运值永久提升！' : seg.grantEffect ? '，下一轮生效！' : ''}`);
         const spinBtn = $('#wheelSpinBtn');
         if (spinBtn) spinBtn.disabled = state.money < 10;
         updateHUD();
@@ -2229,12 +2352,17 @@
       }
 
       function renderActiveEffects() {
-        const active = shopItems.filter(item => state.activeEffects[item.id]);
+        const chips = shopItems
+          .filter(item => !item.repeat && state.activeEffects[item.id])
+          .map(item => `<span class="effect-chip" title="${item.desc}">${item.icon} ${item.name}</span>`);
+        if (state.luckLevel > 0) {
+          chips.unshift(`<span class="effect-chip" title="每喝一瓶幸运药水，好牌率永久 +6%">🧪 幸运 ${state.luckLevel} 级（+${state.luckLevel * 6}%）</span>`);
+        }
         const card = $('#effectsCard');
         const list = $('#effectsList');
-        if (!active.length) { card.hidden = true; list.innerHTML = ''; return; }
+        if (!chips.length) { card.hidden = true; list.innerHTML = ''; return; }
         card.hidden = false;
-        list.innerHTML = active.map(item => `<span class="effect-chip" title="${item.desc}">${item.icon} ${item.name}</span>`).join('');
+        list.innerHTML = chips.join('');
       }
 
       function walkAvatarHTML() {
@@ -2249,20 +2377,6 @@
 
       function renderWalk() {
         state.phase = 'walk';
-        if (state.activeEffects.carUpgrade) {
-          state.walkOnTime = true;
-          state.activeEffects.carUpgrade = false;
-          renderActiveEffects();
-          stopPhaseTimer('🚗');
-          state.ledger.push({ label: '座驾升级：直接开车上班', value: 0, equation: '免走数字线，直接领全额收入' });
-          playFanfare();
-          stage.innerHTML = `
-            <div class="stage-kicker">🚗 走路去工作</div>
-            <h2 class="stage-title">今天开车上班，准时又轻松！</h2>
-            <p class="stage-text">你买了座驾道具，免走数字线，直接准时到班，领取当日全额收入。</p>`;
-          queueTransition(renderQuestion, 1400, 'walk');
-          return;
-        }
         const range = state.job.trait === 'shortWalk' ? 3 : 5;
         state.walkSteps = [randomStep(range), randomStep(range)];
         state.walkTarget = state.walkSteps[0] + state.walkSteps[1];
@@ -2391,6 +2505,7 @@
         clearInterval(state.timerId);
         clearInterval(state.reportTimerId);
         clearInterval(state.ninjaSpawnId);
+        clearTimeout(state.ninjaRoundId);
         clearTimeout(state.transitionTimerId);
         stopMusic();
         Object.assign(state, {
@@ -2401,12 +2516,12 @@
           sessionStartMoney: START_MONEY, ledger: [],
           drawChoices: 1,
           answerCorrect: false, selectedCategory: null,
-          activeEffects: { luckyCharm: false, retryTicket: false, safetyBox: false, overtimePay: false, scamTip: false, extraTime: false, carUpgrade: false, scamShield: false, incomeDouble: false },
+          activeEffects: { doubleNext: false }, luckLevel: 0,
           shopOpeningMoney: START_MONEY, pendingLedger: [],
           walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
           wheelRotation: 0, wheelSpinning: false,
-          fishing: null, fishingPicked: [],
-          ninjaTarget: 0, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
+          fishCaught: [], fishCastsLeft: 0, fishCasting: false,
+          ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
         });
         $('#effectsCard').hidden = true;
         $('#startForm').reset();
