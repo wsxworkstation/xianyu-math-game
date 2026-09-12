@@ -1040,8 +1040,8 @@
       const shopItems = [
         { id: 'doubleNext', name: '加倍券', icon: '✖️', price: 8, tag: '只在下一轮', repeat: false,
           desc: '下一轮结束时，本轮总盈亏 ×2。赚钱变双倍，亏钱也会变双倍——敢不敢用？' },
-        { id: 'luckPotion', name: '幸运药水', icon: '🧪', price: 10, tag: '永久生效', repeat: true,
-          desc: '永久提升幸运值：之后每一轮抽卡的好牌率 +6%。可以重复购买，一瓶一瓶叠上去。' }
+        { id: 'luckPotion', name: '幸运药水', icon: '🧪', price: 3, tag: '永久生效', repeat: true,
+          desc: '永久提升幸运值 +5%：抽卡好牌率、钓号码赔钱、水果忍者、幸运轮盘通通变有利。可以重复买，一瓶一瓶叠上去。' }
       ];
 
       const wheelSegments = [
@@ -1147,7 +1147,8 @@
       const cash = (n) => n < 0 ? `−${Math.abs(n)}金币` : `${n}金币`;
       const mathNumber = (n) => n < 0 ? `−${Math.abs(n)}` : n;
       const operatorNumber = (n) => n < 0 ? `(−${Math.abs(n)})` : n;
-      const boostedChance = (base) => Math.min(1, base + state.luckLevel * .06);
+      const luckBonus = () => state.luckLevel * .05;
+      const boostedChance = (base) => Math.min(1, base + luckBonus());
       const randomStep = (range = 5) => { let s = 0; while (s === 0) s = Math.floor(Math.random() * (range * 2 + 1)) - range; return s; };
       const walkStepLabel = (n) => n < 0 ? `退${Math.abs(n)}步（−${Math.abs(n)}）` : `进${n}步（+${n}）`;
 
@@ -1975,7 +1976,7 @@
             <p class="equation">${state.fishNumbers.map(operatorNumber).join(' + ')} = ?</p>
             <div class="answers">${shuffle([...opts]).map(v => `<button class="answer-btn" type="button" data-v="${v}">${mathNumber(v)}</button>`).join('')}</div>
           </div>
-          <div id="feedback" class="feedback">算对拿 5 金币；算错要随机赔一笔钱。</div>`;
+          <div id="feedback" class="feedback">算对拿 5 金币；算错要随机赔钱（最多赔 ${Math.max(3, 15 - state.luckLevel * 2)} 金币，幸运值越高赔越少）。</div>`;
         stage.querySelectorAll('.answer-btn').forEach(b => b.addEventListener('click', () => answerFishingTotal(Number(b.dataset.v), b)));
         startPhaseTimer('fishing', () => answerFishingTotal(null, null));
       }
@@ -1988,7 +1989,8 @@
         const correct = value === total;
         stage.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
         if (button) button.classList.add(correct ? 'correct' : 'wrong');
-        const penalty = -(1 + Math.floor(Math.random() * 15));
+        const maxPenalty = Math.max(3, 15 - state.luckLevel * 2);
+        const penalty = -(1 + Math.floor(Math.random() * maxPenalty));
         if (correct) { awardMiniGame(5, '钓号码：算对奖金'); playFanfare(); }
         else { awardMiniGame(penalty, '钓号码：算错赔钱'); playLoss(); }
         const fb = $('#feedback');
@@ -2086,7 +2088,7 @@
         if (state.phase !== 'ninja') return;
         const field = $('#ninjaField');
         if (!field) return;
-        const good = Math.random() < .38;
+        const good = Math.random() < Math.min(.72, .38 + luckBonus());
         const eq = makeNinjaEquation(good, state.ninjaTarget);
         const key = FRUIT_KEYS[Math.floor(Math.random() * FRUIT_KEYS.length)];
         const btn = document.createElement('button');
@@ -2198,7 +2200,7 @@
               <span class="shop-icon" aria-hidden="true">${item.icon}</span>
               <div class="shop-info">
                 <div class="shop-head"><strong class="shop-name">${item.name}</strong><span class="shop-tag">${item.tag}</span></div>
-                <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前好牌率 +${owns * 6}%</strong>` : ''}</p>
+                <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前 +${owns * 5}%</strong>` : ''}</p>
                 <button class="shop-buy" type="button" data-id="${item.id}" ${owned || !afford ? 'disabled' : ''}>${owned ? '已购买 ✓' : `买 ${cash(price)}${hasDiscount ? `（原价${item.price}）` : ''}`}</button>
               </div>
             </div>`;
@@ -2226,7 +2228,7 @@
         state.pendingLedger.push({ label: `商店购买：${item.name}`, value: -price, equation: `${cash(before)} − ${price}金币 = ${cash(state.money)}` });
         updateHUD();
         flashDelta(-price);
-        toast(item.id === 'luckPotion' ? `喝下幸运药水！幸运值升到 ${state.luckLevel} 级（好牌率 +${state.luckLevel * 6}%）` : `已购买「${item.name}」，下一轮生效！`);
+        toast(item.id === 'luckPotion' ? `喝下幸运药水！幸运值升到 ${state.luckLevel} 级（全部游戏 +${state.luckLevel * 5}%）` : `已购买「${item.name}」，下一轮生效！`);
         renderShopStage();
       }
 
@@ -2290,7 +2292,8 @@
         state.wheelSpinning = true;
         const spinBtn = $('#wheelSpinBtn');
         if (spinBtn) spinBtn.disabled = true;
-        const chosen = pickWeighted(wheelSegments);
+        let chosen = pickWeighted(wheelSegments);
+        if (chosen.cash < 0 && Math.random() < Math.min(.6, luckBonus() * 2)) chosen = pickWeighted(wheelSegments.filter(x => (x.cash || 0) >= 0 || x.grantLuck || x.grantEffect));
         const base = ((state.wheelRotation % 360) + 360) % 360;
         const targetOffset = (360 - chosen.angle) % 360;
         let delta = targetOffset - base;
@@ -2390,7 +2393,7 @@
           .filter(item => !item.repeat && state.activeEffects[item.id])
           .map(item => `<span class="effect-chip" title="${item.desc}">${item.icon} ${item.name}</span>`);
         if (state.luckLevel > 0) {
-          chips.unshift(`<span class="effect-chip" title="每喝一瓶幸运药水，好牌率永久 +6%">🧪 幸运 ${state.luckLevel} 级（+${state.luckLevel * 6}%）</span>`);
+          chips.unshift(`<span class="effect-chip" title="每喝一瓶幸运药水，全部游戏永久 +5% 有利">🧪 幸运 ${state.luckLevel} 级（+${state.luckLevel * 5}%）</span>`);
         }
         const card = $('#effectsCard');
         const list = $('#effectsList');
