@@ -587,6 +587,7 @@
     .category-name { display: block; font-size: 1.12rem; font-weight: 1000; }
     .category-desc { display: block; margin-top: 4px; color: var(--muted); font-size: .88rem; line-height: 1.45; }
 
+    .luck-badge { display: inline-block; margin-left: 6px; padding: 4px 9px; border: 2px solid var(--ink); border-radius: 999px; background: #eafff3; color: #12805a; font-weight: 1000; font-size: .82rem; }
     .chance-badge {
       display: inline-block;
       padding: 6px 10px;
@@ -1022,6 +1023,7 @@
       // 第几轮结束后插哪个小游戏（其余轮次直接进商店）
       const MINIGAME_SCHEDULE = { 3: 'fishing', 4: 'ninja', 5: 'fishing' };
       const POTION_LIMIT = 2;
+      const WHEEL_SPINS_PER_SESSION = 1;
 
       const jobs = [
         {
@@ -1072,7 +1074,7 @@
         { id: 'doubleNext', name: '加倍券', icon: '✖️', price: 8, tag: '只在下一轮', repeat: false,
           desc: '下一轮结束时，本轮总盈亏 ×2。赚钱变双倍，亏钱也会变双倍——敢不敢用？' },
         { id: 'luckPotion', name: '幸运药水', icon: '🧪', price: 3, tag: '永久生效', repeat: true,
-          desc: '永久提升幸运值 +5%：抽卡好牌率、钓号码赔钱、水果忍者、幸运轮盘通通变有利。可以重复买，一瓶一瓶叠上去。' }
+          desc: '永久提升幸运值 +3%：抽卡好牌率、钓号码赔钱、水果忍者、幸运轮盘通通变有利。可以重复买，一瓶一瓶叠上去。' }
       ];
 
       const wheelSegments = [
@@ -1195,7 +1197,7 @@
         shopOpeningMoney: START_MONEY, pendingLedger: [],
         walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
         wheelRotation: 0, wheelSpinning: false,
-        fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null, lastFishKey: 'minnow', potionsThisShop: 0, penaltyPulled: false,
+        fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null, lastFishKey: 'minnow', potionsThisShop: 0, wheelSpinsThisShop: 0, penaltyPulled: false,
         ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
       };
 
@@ -1208,7 +1210,8 @@
       const cash = (n) => n < 0 ? `−${Math.abs(n)}金币` : `${n}金币`;
       const mathNumber = (n) => n < 0 ? `−${Math.abs(n)}` : n;
       const operatorNumber = (n) => n < 0 ? `(−${Math.abs(n)})` : n;
-      const luckBonus = () => state.luckLevel * .05;
+      const LUCK_PER_POTION = .03;
+      const luckBonus = () => state.luckLevel * LUCK_PER_POTION;
       const boostedChance = (base) => Math.min(1, base + luckBonus());
       const randomStep = (range = 5) => { let s = 0; while (s === 0) s = Math.floor(Math.random() * (range * 2 + 1)) - range; return s; };
       const walkStepLabel = (n) => n < 0 ? `退${Math.abs(n)}步（−${Math.abs(n)}）` : `进${n}步（+${n}）`;
@@ -1623,11 +1626,13 @@
 
       function renderCategoryChoice() {
         state.phase = 'category-choice';
-        const chance = boostedChance(state.answerCorrect ? .55 : .15);
+        const base = state.answerCorrect ? .55 : .15;
+        const chance = boostedChance(base);
+        const luckPct = Math.round(luckBonus() * 100);
         stage.innerHTML = `
           <div class="stage-kicker">${state.answerCorrect ? '🎯 答对奖励' : '🎴 答错也能选牌'}</div>
           <h2 class="stage-title">选择你想抽的卡牌类型</h2>
-          <p class="stage-text"><span class="chance-badge">好牌率 ${Math.round(chance * 100)}%</span> 你会得到${state.drawChoices}张同类型卡，自己翻开后再选1张。</p>
+          <p class="stage-text"><span class="chance-badge">好牌率 ${Math.round(chance * 100)}%</span>${luckPct ? `<span class="luck-badge">基础 ${Math.round(base * 100)}% ＋ 🧪幸运 ${luckPct}%</span>` : ''} 你会得到${state.drawChoices}张同类型卡，自己翻开后再选1张。</p>
           <p class="rarity-legend"><span class="legend-chip common">普通 60% · +2~4</span><span class="legend-chip rare">稀有 30% · +5~7</span><span class="legend-chip legendary">传说 10% · +8~12</span><span class="legend-chip badchip">扣钱 −3~−10</span></p>
           <div class="category-grid">${cardCategories.map(category => `
             <button class="category-btn" type="button" data-category="${category.name}">
@@ -1686,7 +1691,7 @@
         stage.innerHTML = `
           <div class="stage-kicker">🎴 ${state.selectedCategory}</div>
           <h2 class="stage-title">${count > 1 ? `先把${count}张卡全部翻开，再选1张` : '翻开这张卡，看看运气如何'}</h2>
-          <p class="stage-text">本次好牌率 ${Math.round(goodChance * 100)}%。自己动手翻牌，卡片打开后才决定要哪一张。</p>
+          <p class="stage-text">本次好牌率 ${Math.round(goodChance * 100)}%${state.luckLevel > 0 ? `（已含 🧪幸运 ${state.luckLevel} 级的 +${Math.round(luckBonus() * 100)}%）` : ''}。自己动手翻牌，卡片打开后才决定要哪一张。</p>
           <div class="card-grid">${state.cards.map((card, i) => `
             <button class="draw-card" type="button" data-index="${i}" aria-label="翻开第${i + 1}张卡">
               <span class="draw-card-inner">
@@ -1882,6 +1887,7 @@
         state.pendingLedger = [];
         state.wheelSpinning = false;
         state.potionsThisShop = 0;
+        state.wheelSpinsThisShop = 0;
         const game = MINIGAME_SCHEDULE[state.session];
         if (game === 'fishing') { renderFishing(); return; }
         if (game === 'ninja') { renderNinja(); return; }
@@ -2354,7 +2360,7 @@
               <span class="shop-icon" aria-hidden="true">${item.icon}</span>
               <div class="shop-info">
                 <div class="shop-head"><strong class="shop-name">${item.name}</strong><span class="shop-tag">${item.tag}</span></div>
-                <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前 +${owns * 5}%</strong>` : ''}</p>
+                <p class="shop-desc">${item.desc}${owns ? `<br><strong>已喝 ${owns} 瓶，目前 +${Math.round(owns * LUCK_PER_POTION * 100)}%</strong>` : ''}</p>
                 <button class="shop-buy" type="button" data-id="${item.id}" ${owned || !afford ? 'disabled' : ''}>${maxed ? `本轮已买满 ${POTION_LIMIT} 瓶` : owned ? '已购买 ✓' : `买 ${cash(price)}${hasDiscount ? `（原价${item.price}）` : ''}`}</button>
               </div>
             </div>`;
@@ -2383,7 +2389,8 @@
         state.pendingLedger.push({ label: `商店购买：${item.name}`, value: -price, equation: `${cash(before)} − ${price}金币 = ${cash(state.money)}` });
         updateHUD();
         flashDelta(-price);
-        toast(item.id === 'luckPotion' ? `喝下幸运药水！幸运值升到 ${state.luckLevel} 级（全部游戏 +${state.luckLevel * 5}%）` : `已购买「${item.name}」，下一轮生效！`);
+        renderActiveEffects();
+        toast(item.id === 'luckPotion' ? `喝下幸运药水！幸运值升到 ${state.luckLevel} 级（全部游戏 +${Math.round(state.luckLevel * LUCK_PER_POTION * 100)}%）` : `已购买「${item.name}」，下一轮生效！`);
         renderShopStage();
       }
 
@@ -2411,17 +2418,18 @@
       }
 
       function renderWheelStage() {
-        const wheelDisabled = state.money < 0 || state.money < 10 || state.wheelSpinning;
-        const wheelDisableReason = state.money < 0 ? '总现金是负数，暂时不能玩轮盘。' : (state.money < 10 ? '现金不足10金币，无法转轮盘。' : '');
+        const spentSpin = state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION;
+        const wheelDisabled = spentSpin || state.money < 0 || state.money < 10 || state.wheelSpinning;
+        const wheelDisableReason = spentSpin ? '这一轮的抽奖机会已经用掉了。' : state.money < 0 ? '总金币是负数，暂时不能玩轮盘。' : (state.money < 10 ? '金币不足10，无法转轮盘。' : '');
         stage.innerHTML = `
           <div class="stage-kicker">🎡 幸运轮盘</div>
           <h2 class="stage-title">转吧，看看手气如何！</h2>
-          <p class="stage-text">10金币/次，可以连续转，钱不够或总现金是负数时就不能再玩了。</p>
+          <p class="stage-text">每一轮只有一次机会，10金币转一次。金币不足或总金币是负数时不能玩。</p>
           <div class="wheel-wrap">
             <div class="wheel-pointer" aria-hidden="true">▼</div>
             <div id="wheelDial" class="wheel-dial">${wheelSegments.map(seg => `<span class="wheel-slice-label" style="transform: rotate(${seg.angle}deg) translateY(var(--label-offset)) rotate(${-seg.angle}deg);"><span>${seg.icon}</span><span>${seg.wheelText || seg.label}</span></span>`).join('')}</div>
           </div>
-          <button id="wheelSpinBtn" class="secondary-btn" type="button" ${wheelDisabled ? 'disabled' : ''}>转一次 10金币</button>
+          <button id="wheelSpinBtn" class="secondary-btn" type="button" ${wheelDisabled ? 'disabled' : ''}>${spentSpin ? '本轮已抽过' : '转一次 10金币'}</button>
           ${wheelDisableReason ? `<p class="stage-text" style="margin-top:8px">${wheelDisableReason}</p>` : ''}
           <div id="wheelResult" class="wheel-result" hidden></div>
           <div class="report-next">
@@ -2437,6 +2445,8 @@
 
       function spinWheel() {
         if (state.phase !== 'wheel' || state.wheelSpinning) return;
+        if (state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION) { toast('这一轮的抽奖机会已经用掉了。'); return; }
+        state.wheelSpinsThisShop += 1;
         if (state.money < 0) { toast('总现金是负数，暂时不能玩轮盘。'); return; }
         if (state.money < 10) { toast('现金不足10金币，无法转轮盘。'); return; }
         const before = state.money;
@@ -2499,7 +2509,11 @@
         else if (!seg.cash) playResult(false);
         toast(`轮盘结果：${seg.label}${seg.grantLuck ? '，幸运值永久提升！' : seg.grantEffect ? '，下一轮生效！' : ''}`);
         const spinBtn = $('#wheelSpinBtn');
-        if (spinBtn) spinBtn.disabled = state.money < 10;
+        if (spinBtn) {
+          const spent = state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION;
+          spinBtn.disabled = spent || state.money < 10;
+          spinBtn.textContent = spent ? '本轮已抽过' : '转一次 10金币';
+        }
         updateHUD();
       }
 
@@ -2548,7 +2562,7 @@
           .filter(item => !item.repeat && state.activeEffects[item.id])
           .map(item => `<span class="effect-chip" title="${item.desc}">${item.icon} ${item.name}</span>`);
         if (state.luckLevel > 0) {
-          chips.unshift(`<span class="effect-chip" title="每喝一瓶幸运药水，全部游戏永久 +5% 有利">🧪 幸运 ${state.luckLevel} 级（+${state.luckLevel * 5}%）</span>`);
+          chips.unshift(`<span class="effect-chip" title="每喝一瓶幸运药水，全部游戏永久 +3% 有利">🧪 幸运 ${state.luckLevel} 级（+${Math.round(state.luckLevel * LUCK_PER_POTION * 100)}%）</span>`);
         }
         const card = $('#effectsCard');
         const list = $('#effectsList');
