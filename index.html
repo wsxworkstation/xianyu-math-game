@@ -666,6 +666,23 @@
 
     .sprite { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
+    /* ---- 8-bit 号码机 ---- */
+    .reel-machine { width: min(420px, 100%); margin: 16px auto 6px; padding: 14px; border: 4px solid var(--ink); border-radius: 18px;
+      background: linear-gradient(180deg, #4c78ff 0%, #284cbd 100%); box-shadow: 7px 8px 0 rgba(24,49,83,.35); text-align: center; }
+    .reel-head { margin-bottom: 10px; color: #fff; font-weight: 1000; letter-spacing: .16em; font-size: .82rem; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+    .reel-window { display: flex; align-items: center; justify-content: center; gap: 4px; min-height: 92px; padding: 10px 14px;
+      border: 4px solid var(--ink); border-radius: 12px; background: #14142a; box-shadow: inset 0 0 22px rgba(255,232,115,.22); }
+    .reel-window.spinning { animation: reelShake .1s linear infinite alternate; }
+    @keyframes reelShake { from { transform: translateX(-1.5px); } to { transform: translateX(1.5px); } }
+    .digit-sprite { width: 42px; height: 59px; }
+    .digit-sprite.small { width: 22px; height: 31px; }
+    .reel-idle { color: #6a6a8a; font-size: 2.4rem; font-weight: 1000; letter-spacing: .2em; }
+    .reel-fish { width: 62px; height: 47px; margin-right: 6px; animation: catchPop .45s cubic-bezier(.2,1.5,.5,1) both; }
+    .reel-bulbs { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .reel-bulb { width: 16px; height: 16px; border: 3px solid var(--ink); border-radius: 50%; background: #1d2a4d; }
+    .reel-bulb.lit { background: var(--yellow); box-shadow: 0 0 10px rgba(255,216,77,.9); }
+    .caught-num { display: flex; align-items: center; gap: 2px; padding: 7px 10px; border: 3px solid var(--ink); border-radius: 12px; background: #14142a; }
+
     /* ---- 钓鱼 ---- */
     .fish-chart { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 6px; }
     .fish-chart-item { display: grid; justify-items: center; gap: 2px; min-width: 82px; padding: 8px 6px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; box-shadow: 3px 3px 0 rgba(24,49,83,.14); }
@@ -882,7 +899,7 @@
 <body>
   <main class="app-shell">
     <header class="topbar">
-      <div class="brand"><span class="brand-badge" aria-hidden="true">＋</span><span class="brand-title">创业30天 · 数学大富翁</span></div>
+      <div class="brand"><span class="brand-badge" aria-hidden="true">＋</span><span class="brand-title">创业一星期 · 数学大富翁</span></div>
       <button id="soundBtn" class="icon-button" type="button" aria-label="关闭声音" title="关闭声音">🔊</button>
     </header>
 
@@ -892,9 +909,9 @@
         <div class="start-veil" aria-hidden="true"></div>
         <div class="start-copy">
           <h1 id="gameTitle" class="start-logo">
-            <span class="logo-kicker">创业30天</span>
+            <span class="logo-kicker">创业一星期</span>
             <span class="logo-main">数学大富翁</span>
-            <span class="logo-sub">翻 身 挑 战</span>
+            <span class="logo-sub">翻身吧，咸鱼</span>
           </h1>
           <form id="startForm" class="start-form">
             <div class="field">
@@ -940,8 +957,8 @@
         <div class="main-stage">
           <div class="panel game-header">
             <div>
-              <div class="progress-meta"><strong id="sessionLabel">第 1 / 7 轮</strong><span id="dayLabel">第1–4天</span></div>
-              <div class="progress-track" role="progressbar" aria-label="30天创业进度" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1"><div id="progressFill" class="progress-fill"></div></div>
+              <div class="progress-meta"><strong id="sessionLabel">第 1 / 7 轮</strong><span id="dayLabel">第1天</span></div>
+              <div class="progress-track" role="progressbar" aria-label="一星期创业进度" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1"><div id="progressFill" class="progress-fill"></div></div>
             </div>
             <div id="timer" class="timer" aria-live="polite">02:00</div>
           </div>
@@ -962,13 +979,17 @@
       'use strict';
 
       const TOTAL_SESSIONS = 7;
-      const TOTAL_DAYS = 30;
+      const TOTAL_DAYS = 7;
       const dayRange = (session) => [
         Math.round((session - 1) * TOTAL_DAYS / TOTAL_SESSIONS) + 1,
         Math.round(session * TOTAL_DAYS / TOTAL_SESSIONS)
       ];
+      const dayLabelFor = (session) => {
+        const [a, b] = dayRange(session);
+        return a === b ? `第${a}天` : `第${a}–${b}天`;
+      };
       const REPORT_SECONDS = 30;
-      const PHASE_SECONDS = { walk: 30, question: 60, 'category-choice': 45, cards: 45, decision: 45, fishing: 45, ninja: 30 };
+      const PHASE_SECONDS = { walk: 30, question: 60, 'category-choice': 45, cards: 45, decision: 45, fishing: 45, ninja: 55 };
       const MINIGAME_FROM_SESSION = 3;
 
       const jobs = [
@@ -1113,7 +1134,7 @@
         shopOpeningMoney: START_MONEY, pendingLedger: [],
         walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
         wheelRotation: 0, wheelSpinning: false,
-        fishCaught: [], fishCastsLeft: 0, fishCasting: false,
+        fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null, lastFishKey: 'minnow',
         ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
       };
 
@@ -1342,8 +1363,7 @@
         profitEl.classList.toggle('loss', profit < 0);
         $('#scoreDisplay').textContent = `${state.correct} / ${state.attempted}`;
         $('#sessionLabel').textContent = `第 ${state.session} / ${TOTAL_SESSIONS} 轮`;
-        const [dayA, dayB] = dayRange(state.session);
-        $('#dayLabel').textContent = `第${dayA}–${dayB}天`;
+        $('#dayLabel').textContent = dayLabelFor(state.session);
         $('#progressFill').style.width = `${state.session / TOTAL_SESSIONS * 100}%`;
         $('.progress-track').setAttribute('aria-valuenow', state.session);
       }
@@ -1744,9 +1764,9 @@
         stage.innerHTML = `
           <div class="report-hero">
             <div class="report-icon">📒</div>
-            <div><div class="stage-kicker">第${dayRange(state.session)[0]}–${dayRange(state.session)[1]}天完成</div><h2 class="stage-title">这几天有赚钱吗？</h2><p class="stage-text">先看本轮盈亏，再看看每一笔收入和支出。</p></div>
+            <div><div class="stage-kicker">${dayLabelFor(state.session)}结束</div><h2 class="stage-title">今天有赚钱吗？</h2><p class="stage-text">先看本轮盈亏，再看看每一笔收入和支出。</p></div>
           </div>
-          <div class="session-outcome ${change < 0 ? 'loss' : ''}"><span>本轮盈亏</span><strong>${change === 0 ? '0金币 · 收支平衡' : `${signed(change)} · ${change > 0 ? '这三天有赚钱！' : '这三天亏钱了'}`}</strong></div>
+          <div class="session-outcome ${change < 0 ? 'loss' : ''}"><span>本轮盈亏</span><strong>${change === 0 ? '0金币 · 收支平衡' : `${signed(change)} · ${change > 0 ? '今天有赚钱！' : '今天亏钱了'}`}</strong></div>
           <div class="report-list">${state.ledger.map(item => `<div class="report-row"><span>${item.label}</span><span>${item.value === 0 ? '0金币' : signed(item.value)}</span><span class="report-row-equation">${item.equation}</span></div>`).join('')}</div>
           <div class="report-equation">总现金：${cash(state.sessionStartMoney)} ${change >= 0 ? '+' : '−'} ${Math.abs(change)}金币 = ${cash(state.money)}</div>
           ${state.money < 0 ? `<div class="negative-tip">📉 ${cash(state.money)} 是负数，表示你的支出比现金多 ${Math.abs(state.money)}金币。你没有出局，下一轮仍可赚钱翻身！</div>` : ''}
@@ -1811,7 +1831,18 @@
         apple: { g: ['.......ooo....','......okbbo...','......okobo...','....oooooo....','...oaaaaaao...','..oaawaaaaao..','.oaawaaaaaaao.','.oaaaaaaaaaao.','oaaaaaaaaaaaao','.oaaaaaaaaaao.','.oaaaaaaaaaao.','..oaaaaaaaao..','...oaaaaaao...','....oooooo....'], p: { o:'#4a1113',a:'#ef3b3b',b:'#3fa34d',w:'#ffb3b3',k:'#5a3a1a',s:'#fff' } },
         orange: { g: ['......oo......','.....obbo.....','....oookoo....','...oaaaaaao...','..oaawaaaaao..','.oaawaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','.oaaaaaaaaaao.','..oaaaaaaaao..','...oaaaaaao...','....oooooo....'], p: { o:'#6a3200',a:'#ff9f1c',b:'#3fa34d',w:'#ffd79a',k:'#5a3a1a',s:'#fff' } },
         banana: { g: ['...o..........','..oko.........','.oaako........','.oaaao........','.oaaao........','.oaaabo.......','..oaaabo......','..oaaaaboo....','...oaaaabboo..','....oaaaaabbo.','.....oaaaaabbo','......obbbbbko','.......ooobbbo','..........ooo.'], p: { o:'#5c4a10',a:'#ffd93d',b:'#d9a520',w:'#fff3b0',k:'#5c4a10',s:'#fff' } },
-        berry: { g: ['......oo......','...ooobboo....','.oobbbbbbboo..','oaaaaaaaaaaao.','oaaaaaaaaaaao.','.oaaaaaaaaao..','.oaaawaaaaao..','..oaaaaawao...','..oawaaaaao...','...oaawaao....','...oaaawao....','....oaaao.....','....oaaao.....','.....ooo......'], p: { o:'#5a0f1e',a:'#f0334f',b:'#3fa34d',w:'#ffe066',k:'#5a0f1e',s:'#fff' } }
+        berry: { g: ['......oo......','...ooobboo....','.oobbbbbbboo..','oaaaaaaaaaaao.','oaaaaaaaaaaao.','.oaaaaaaaaao..','.oaaawaaaaao..','..oaaaaawao...','..oawaaaaao...','...oaawaao....','...oaaawao....','....oaaao.....','....oaaao.....','.....ooo......'], p: { o:'#5a0f1e',a:'#f0334f',b:'#3fa34d',w:'#ffe066',k:'#5a0f1e',s:'#fff' } },
+        d0: { g: ['.aaa.','a...a','a..aa','a.a.a','aa..a','a...a','.aaa.'], p: { a:'#ffe873' } },
+        d1: { g: ['..a..','.aa..','..a..','..a..','..a..','..a..','.aaa.'], p: { a:'#ffe873' } },
+        d2: { g: ['.aaa.','a...a','....a','...a.','..a..','.a...','aaaaa'], p: { a:'#ffe873' } },
+        d3: { g: ['aaaa.','....a','....a','.aaa.','....a','....a','aaaa.'], p: { a:'#ffe873' } },
+        d4: { g: ['a...a','a...a','a...a','aaaaa','....a','....a','....a'], p: { a:'#ffe873' } },
+        d5: { g: ['aaaaa','a....','aaaa.','....a','....a','a...a','.aaa.'], p: { a:'#ffe873' } },
+        d6: { g: ['.aaa.','a....','a....','aaaa.','a...a','a...a','.aaa.'], p: { a:'#ffe873' } },
+        d7: { g: ['aaaaa','....a','...a.','..a..','.a...','.a...','.a...'], p: { a:'#ffe873' } },
+        d8: { g: ['.aaa.','a...a','a...a','.aaa.','a...a','a...a','.aaa.'], p: { a:'#ffe873' } },
+        d9: { g: ['.aaa.','a...a','a...a','.aaaa','....a','....a','.aaa.'], p: { a:'#ffe873' } },
+        dneg: { g: ['.....','.....','.....','aaaaa','.....','.....','.....'], p: { a:'#ffe873' } }
       };
 
       function pixelSprite(key, cls) {
@@ -1833,64 +1864,58 @@
         return `<svg class="${cls || 'sprite'}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
       }
 
-      /* ================= 🎣 钓鱼：抛竿三次，算出总收获 ================= */
-
-      const FISH_TYPES = [
-        { key: 'minnow',  name: '小鱼仔',  value: 2,   weight: 32, note: '最常见的小杂鱼' },
-        { key: 'salted',  name: '咸鱼',    value: 4,   weight: 26, note: '晒干了一样能卖' },
-        { key: 'boot',    name: '破靴子',  value: -3,  weight: 18, note: '钓到垃圾，还要付钱丢掉' },
-        { key: 'grouper', name: '石斑鱼',  value: 8,   weight: 17, note: '好货，餐厅抢着要' },
-        { key: 'golden',  name: '黄金鱼',  value: 20,  weight: 7,  note: '传说中的大奖！' }
-      ];
+      /* ================= 🎣 钓号码：8-bit 抽号机，算负数总和 ================= */
 
       const FISH_CASTS = 3;
 
+      function pixelNumber(value, cls) {
+        return String(value)
+          .replace('-', '−')
+          .split('')
+          .map(ch => pixelSprite(ch === '−' ? 'dneg' : 'd' + ch, cls || 'sprite digit-sprite'))
+          .join('');
+      }
+
       function renderFishing() {
         state.phase = 'fishing';
-        state.fishCaught = [];
+        state.fishNumbers = [];
         state.fishCastsLeft = FISH_CASTS;
         state.fishCasting = false;
+        state.reelValue = -0;
         renderFishingStage();
         startPhaseTimer('fishing', fishingTimeout);
       }
 
       function fishingTotal() {
-        return state.fishCaught.reduce((sum, f) => sum + f.value, 0);
-      }
-
-      function fishingEquation() {
-        if (!state.fishCaught.length) return '还没钓到';
-        return state.fishCaught.map(f => operatorNumber(f.value)).join(' + ') + ' = ' + mathNumber(fishingTotal());
+        return state.fishNumbers.reduce((sum, n) => sum + n, 0);
       }
 
       function renderFishingStage() {
         const left = state.fishCastsLeft;
         stage.innerHTML = `
-          <div class="stage-kicker">🎣 休息一下 · 钓鱼时间</div>
-          <h2 class="stage-title">抛竿 ${FISH_CASTS} 次，看看能钓到什么！</h2>
-          <p class="stage-text">钓到什么鱼全看运气。每种鱼卖的价钱都不一样，钓到破靴子还要倒贴钱。三次钓完，要自己算出一共卖多少。</p>
-          <div class="fish-chart">${FISH_TYPES.map(t => `
-            <div class="fish-chart-item">
-              <div class="fish-chart-art">${pixelSprite(t.key, 'sprite fish-sprite')}</div>
-              <strong>${t.name}</strong>
-              <span class="${t.value < 0 ? 'bad' : ''}">${signed(t.value)}</span>
-            </div>`).join('')}</div>
-          <div class="pond">
-            <div class="pond-line" id="pondLine"></div>
-            <div class="pond-catch" id="pondCatch">${state.fishCasting ? '' : (state.fishCaught.length ? pixelSprite(state.fishCaught[state.fishCaught.length - 1].key, 'sprite catch-sprite') : '')}</div>
+          <div class="stage-kicker">🎣 休息一下 · 钓号码</div>
+          <h2 class="stage-title">拉杆 ${FISH_CASTS} 次，钓起三个负数！</h2>
+          <p class="stage-text">号码机会一直转，停下来的都是负数。三个钓完，要自己算出加起来是多少——<strong>算对拿 5 金币，算错要赔钱</strong>。号码本身不进钱包，只是给你算的。</p>
+          <div class="reel-machine">
+            <div class="reel-head">8-BIT 号码机</div>
+            <div class="reel-window ${state.fishCasting ? 'spinning' : ''}" id="reelWindow">
+              ${state.fishCasting
+                ? pixelNumber(state.reelValue)
+                : state.fishNumbers.length
+                  ? pixelSprite(state.lastFishKey || 'minnow', 'sprite reel-fish') + pixelNumber(state.fishNumbers[state.fishNumbers.length - 1])
+                  : '<span class="reel-idle">- -</span>'}
+            </div>
+            <div class="reel-bulbs">${[0, 1, 2].map(i => `<span class="reel-bulb ${i < state.fishNumbers.length ? 'lit' : ''}"></span>`).join('')}</div>
           </div>
-          <div class="basket-row" id="basketRow">${state.fishCaught.map(f => `
-            <div class="basket-fish">
-              ${pixelSprite(f.key, 'sprite basket-sprite')}
-              <span class="${f.value < 0 ? 'bad' : ''}">${signed(f.value)}</span>
-            </div>`).join('') || '<span class="basket-empty">鱼篓还是空的</span>'}</div>
-          <p class="mini-score">鱼篓合计：<strong>${fishingEquation()}</strong></p>
+          <div class="basket-row">${state.fishNumbers.map(n => `
+            <div class="caught-num">${pixelNumber(n, 'sprite digit-sprite small')}</div>`).join('') || '<span class="basket-empty">还没钓到号码</span>'}</div>
+          <p class="mini-score">目前的算式：<strong>${state.fishNumbers.length ? state.fishNumbers.map(operatorNumber).join(' + ') : '—'}</strong></p>
           <div class="net-row">
             <button id="castBtn" class="primary-btn" type="button" style="grid-column:auto; min-width:220px" ${left <= 0 || state.fishCasting ? 'disabled' : ''}>
-              ${state.fishCasting ? '收线中…' : `🎣 抛竿（还有 ${left} 次）`}
+              ${state.fishCasting ? '号码转动中…' : `🎣 拉杆（还有 ${left} 次）`}
             </button>
           </div>
-          <div id="feedback" class="feedback">${left > 0 ? '按「抛竿」开始钓鱼。' : '三次钓完了，来算算一共卖多少钱。'}</div>`;
+          <div id="feedback" class="feedback">${left > 0 ? '按「拉杆」启动号码机。' : '三个号码到齐了，来算总和。'}</div>`;
         const btn = $('#castBtn');
         if (btn) btn.addEventListener('click', castRod);
       }
@@ -1898,29 +1923,40 @@
       function castRod() {
         if (state.phase !== 'fishing' || state.fishCasting || state.fishCastsLeft <= 0) return;
         state.fishCasting = true;
+        const finalValue = -(1 + Math.floor(Math.random() * 9));
         renderFishingStage();
-        const line = $('#pondLine');
-        if (line) line.classList.add('casting');
-        noiseBurst(0, .18, .04, 900);
-        tone(320, 0, .18, 'sine', .03, 180);
-        queueTransition(() => {
-          const caught = pickWeighted(FISH_TYPES);
-          state.fishCaught.push(caught);
-          state.fishCastsLeft -= 1;
-          state.fishCasting = false;
-          if (caught.value >= 8) playFanfare();
-          else if (caught.value < 0) playLoss();
-          else playCoin();
-          renderFishingStage();
-          const fb = $('#feedback');
-          if (fb) {
-            fb.className = `feedback ${caught.value < 0 ? 'error' : 'success'}`;
-            fb.innerHTML = `钓到了 <strong>${caught.name}</strong>（${caught.note}）：${signed(caught.value)}`;
-          }
-          const catchBox = $('#pondCatch');
-          if (catchBox) catchBox.classList.add('reveal');
-          if (state.fishCastsLeft <= 0) queueTransition(askFishingTotal, 1500, 'fishing');
-        }, 1400, 'fishing');
+        let ticks = 0;
+        const totalTicks = 24;
+        const spin = () => {
+          if (state.phase !== 'fishing') return;
+          ticks += 1;
+          const done = ticks >= totalTicks;
+          state.reelValue = done ? finalValue : -(1 + Math.floor(Math.random() * 9));
+          const win = $('#reelWindow');
+          if (win) win.innerHTML = pixelNumber(state.reelValue);
+          tone(done ? 880 : 520 + (ticks % 4) * 60, 0, .04, 'square', .028);
+          if (done) { settleCatch(finalValue); return; }
+          const t = ticks / totalTicks;
+          state.reelTimer = setTimeout(spin, 45 + t * t * t * 340);
+        };
+        spin();
+      }
+
+      const FISH_KEYS = ['minnow', 'salted', 'grouper', 'golden', 'boot'];
+
+      function settleCatch(value) {
+        state.lastFishKey = FISH_KEYS[Math.floor(Math.random() * FISH_KEYS.length)];
+        state.fishNumbers.push(value);
+        state.fishCastsLeft -= 1;
+        state.fishCasting = false;
+        playCoin();
+        renderFishingStage();
+        const fb = $('#feedback');
+        if (fb) {
+          fb.className = 'feedback';
+          fb.innerHTML = `钓到号码 <strong>${mathNumber(value)}</strong>。${state.fishCastsLeft > 0 ? `还有 ${state.fishCastsLeft} 次。` : '三个到齐了！'}`;
+        }
+        if (state.fishCastsLeft <= 0) queueTransition(askFishingTotal, 1400, 'fishing');
       }
 
       function askFishingTotal() {
@@ -1929,21 +1965,17 @@
         stopPhaseTimer('🧮');
         const total = fishingTotal();
         const opts = new Set([total]);
-        const spread = [1, -1, 2, -2, 3, -3, 4, -4];
-        for (const d of shuffle(spread)) { if (opts.size >= 4) break; opts.add(total + d); }
+        for (const dlt of shuffle([1, -1, 2, -2, 3, -3, 4, 5])) { if (opts.size >= 4) break; opts.add(total + dlt); }
         stage.innerHTML = `
-          <div class="stage-kicker">🧮 算一算 · 今天钓了多少钱</div>
-          <h2 class="stage-title">三条收获加起来，一共卖多少？</h2>
-          <div class="basket-row">${state.fishCaught.map(f => `
-            <div class="basket-fish">
-              ${pixelSprite(f.key, 'sprite basket-sprite')}
-              <span class="${f.value < 0 ? 'bad' : ''}">${signed(f.value)}</span>
-            </div>`).join('')}</div>
+          <div class="stage-kicker">🧮 算一算 · 三个负数加起来</div>
+          <h2 class="stage-title">这三个号码加起来是多少？</h2>
+          <div class="basket-row">${state.fishNumbers.map(n => `
+            <div class="caught-num">${pixelNumber(n, 'sprite digit-sprite small')}</div>`).join('')}</div>
           <div class="question-box">
-            <p class="equation">${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ?</p>
+            <p class="equation">${state.fishNumbers.map(operatorNumber).join(' + ')} = ?</p>
             <div class="answers">${shuffle([...opts]).map(v => `<button class="answer-btn" type="button" data-v="${v}">${mathNumber(v)}</button>`).join('')}</div>
           </div>
-          <div id="feedback" class="feedback">算对了额外加 3 金币奖金。</div>`;
+          <div id="feedback" class="feedback">算对拿 5 金币；算错要随机赔一笔钱。</div>`;
         stage.querySelectorAll('.answer-btn').forEach(b => b.addEventListener('click', () => answerFishingTotal(Number(b.dataset.v), b)));
         startPhaseTimer('fishing', () => answerFishingTotal(null, null));
       }
@@ -1956,23 +1988,23 @@
         const correct = value === total;
         stage.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
         if (button) button.classList.add(correct ? 'correct' : 'wrong');
-        awardMiniGame(total, '钓鱼收获');
-        if (correct) awardMiniGame(3, '钓鱼算账奖金');
-        if (correct) playFanfare(); else playResult(false);
+        const penalty = -(1 + Math.floor(Math.random() * 15));
+        if (correct) { awardMiniGame(5, '钓号码：算对奖金'); playFanfare(); }
+        else { awardMiniGame(penalty, '钓号码：算错赔钱'); playLoss(); }
         const fb = $('#feedback');
         if (fb) {
           fb.className = `feedback ${correct ? 'success' : 'error'}`;
           fb.innerHTML = correct
-            ? `算对了！${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ${mathNumber(total)}，鱼钱 ${cash(total)} 加奖金 3金币。`
-            : `正确答案是 ${mathNumber(total)}：${state.fishCaught.map(f => operatorNumber(f.value)).join(' + ')} = ${mathNumber(total)}。鱼钱 ${cash(total)} 照拿，但没有奖金。${numberLineHTML(total)}`;
+            ? `算对了！${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}，拿到 5金币。`
+            : `正确答案是 ${mathNumber(total)}：${state.fishNumbers.map(operatorNumber).join(' + ')} = ${mathNumber(total)}。这次赔了 ${Math.abs(penalty)}金币。${numberLineHTML(total)}`;
         }
-        queueTransition(leaveMiniGame, 3600, 'fishing-result');
+        queueTransition(leaveMiniGame, 3800, 'fishing-result');
       }
 
       function fishingTimeout() {
         if (state.phase !== 'fishing') return;
-        toast('钓鱼时间到！');
-        if (state.fishCaught.length) { askFishingTotal(); return; }
+        toast('时间到！');
+        if (state.fishNumbers.length) { askFishingTotal(); return; }
         state.phase = 'fishing-result';
         stopPhaseTimer('⏰');
         leaveMiniGame();
@@ -1982,7 +2014,7 @@
 
       const FRUIT_KEYS = ['melon', 'apple', 'orange', 'banana', 'berry'];
       const NINJA_ROUNDS = 5;
-      const NINJA_ROUND_MS = 7000;
+      const NINJA_ROUND_MS = 9000;
 
       function makeNinjaEquation(wantAnswer, targetAnswer) {
         const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -2011,7 +2043,7 @@
         stage.innerHTML = `
           <div class="stage-kicker">🍉 休息一下 · 水果忍者</div>
           <h2 class="stage-title">五场挑战，每场要切的答案都不同！</h2>
-          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。每场 7 秒，看清楚目标再下手。</p>
+          <p class="stage-text">算式会飞上来，点一下就是切。切对 +2金币，切错 −1金币。每场 9 秒，看清楚目标再下手。</p>
           <div class="ninja-head">
             <div class="mini-target"><span id="ninjaRoundLabel">第 1 / ${NINJA_ROUNDS} 场 · 只切答案 =</span><strong id="ninjaTargetLabel">?</strong></div>
             <div class="ninja-pips" id="ninjaPips"></div>
@@ -2040,7 +2072,7 @@
         if (field) field.innerHTML = '';
         tone(660, 0, .12, 'triangle', .04, 990);
         clearInterval(state.ninjaSpawnId);
-        state.ninjaSpawnId = setInterval(spawnFruit, 850);
+        state.ninjaSpawnId = setInterval(spawnFruit, 1150);
         spawnFruit();
         clearTimeout(state.ninjaRoundId);
         state.ninjaRoundId = setTimeout(() => {
@@ -2064,7 +2096,7 @@
         btn.innerHTML = `${pixelSprite(key, 'sprite fruit-sprite')}<span class="fruit-eq">${eq.text}</span>`;
         const leftPct = 6 + Math.random() * 74;
         const rise = Math.round(190 + Math.random() * 110);
-        const dur = (2.5 + Math.random() * .9).toFixed(2);
+        const dur = (4.2 + Math.random() * 1.2).toFixed(2);
         btn.style.left = `${leftPct}%`;
         btn.style.setProperty('--rise', `${rise}px`);
         btn.style.setProperty('--dur', `${dur}s`);
@@ -2127,6 +2159,8 @@
 
       function leaveMiniGame() {
         if (!['fishing', 'fishing-sum', 'fishing-result', 'ninja', 'ninja-result'].includes(state.phase)) return;
+        clearTimeout(state.reelTimer);
+        state.reelTimer = null;
         clearInterval(state.ninjaSpawnId);
         state.ninjaSpawnId = null;
         clearTimeout(state.ninjaRoundId);
@@ -2485,12 +2519,12 @@
         showScreen('endScreen');
         $('#endContent').innerHTML = `
           <div class="trophy" aria-hidden="true">${result.icon}</div>
-          <p class="eyebrow" style="margin-inline:auto">30天翻身挑战完成</p>
+          <p class="eyebrow" style="margin-inline:auto">一星期翻身挑战完成</p>
           <h1 id="endTitle" class="end-title">${result.title}</h1>
           <p class="end-subtitle">${state.player} · ${state.job.icon} ${state.job.name}</p>
           <div class="end-money ${state.money < 0 ? 'money negative' : ''}">${cash(state.money)}</div>
           <div class="summary-grid">
-            <div class="summary-item"><span>完成天数</span><strong>30天</strong></div>
+            <div class="summary-item"><span>完成天数</span><strong>${TOTAL_DAYS}天</strong></div>
             <div class="summary-item"><span>答题正确率</span><strong>${accuracy}%</strong></div>
             <div class="summary-item"><span>未作答</span><strong>${state.unanswered}题</strong></div>
             <div class="summary-item"><span>避开风险</span><strong>${state.avoided}次</strong></div>
@@ -2506,6 +2540,7 @@
         clearInterval(state.reportTimerId);
         clearInterval(state.ninjaSpawnId);
         clearTimeout(state.ninjaRoundId);
+        clearTimeout(state.reelTimer);
         clearTimeout(state.transitionTimerId);
         stopMusic();
         Object.assign(state, {
@@ -2520,7 +2555,7 @@
           shopOpeningMoney: START_MONEY, pendingLedger: [],
           walkSteps: [0, 0], walkTarget: 0, walkPosition: 0, walkOnTime: true,
           wheelRotation: 0, wheelSpinning: false,
-          fishCaught: [], fishCastsLeft: 0, fishCasting: false,
+          fishNumbers: [], fishCastsLeft: 0, fishCasting: false, reelValue: 0, reelTimer: null,
           ninjaTarget: 0, ninjaRound: 0, ninjaTargets: [], ninjaRoundId: null, ninjaEarned: 0, ninjaHits: 0, ninjaMiss: 0, ninjaSpawnId: null
         });
         $('#effectsCard').hidden = true;
