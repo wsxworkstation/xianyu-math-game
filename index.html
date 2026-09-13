@@ -1024,6 +1024,7 @@
       const MINIGAME_SCHEDULE = { 3: 'fishing', 4: 'ninja', 5: 'fishing' };
       const POTION_LIMIT = 2;
       const WHEEL_SPINS_PER_SESSION = 1;
+      const WHEEL_COST = 5;
 
       const jobs = [
         {
@@ -2401,7 +2402,7 @@
         stage.innerHTML = `
           <div class="stage-kicker">🎡 幸运轮盘</div>
           <h2 class="stage-title">你要抽奖吗？</h2>
-          <p class="stage-text">转一次10金币，从小猪扑满里扣。金币不足或总金币是负数时不能玩，中奖效果立即生效。</p>
+          <p class="stage-text">转一次 ${WHEEL_COST} 金币，从小猪扑满里扣。每一轮只有一次机会，金币不足或总金币是负数时不能玩。</p>
           <div class="decision-actions">
             <button class="choice-btn trust" type="button" id="wheelYesBtn">要抽奖 🎡</button>
             <button class="choice-btn refuse" type="button" id="wheelNoBtn">不要抽奖</button>
@@ -2419,17 +2420,17 @@
 
       function renderWheelStage() {
         const spentSpin = state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION;
-        const wheelDisabled = spentSpin || state.money < 0 || state.money < 10 || state.wheelSpinning;
-        const wheelDisableReason = spentSpin ? '这一轮的抽奖机会已经用掉了。' : state.money < 0 ? '总金币是负数，暂时不能玩轮盘。' : (state.money < 10 ? '金币不足10，无法转轮盘。' : '');
+        const wheelDisabled = spentSpin || state.money < 0 || state.money < WHEEL_COST || state.wheelSpinning;
+        const wheelDisableReason = spentSpin ? '这一轮的抽奖机会已经用掉了。' : state.money < 0 ? '总金币是负数，暂时不能玩轮盘。' : (state.money < WHEEL_COST ? `金币不足${WHEEL_COST}，无法转轮盘。` : '');
         stage.innerHTML = `
           <div class="stage-kicker">🎡 幸运轮盘</div>
           <h2 class="stage-title">转吧，看看手气如何！</h2>
-          <p class="stage-text">每一轮只有一次机会，10金币转一次。金币不足或总金币是负数时不能玩。</p>
+          <p class="stage-text">每一轮只有一次机会，${WHEEL_COST}金币转一次。金币不足或总金币是负数时不能玩。</p>
           <div class="wheel-wrap">
             <div class="wheel-pointer" aria-hidden="true">▼</div>
             <div id="wheelDial" class="wheel-dial">${wheelSegments.map(seg => `<span class="wheel-slice-label" style="transform: rotate(${seg.angle}deg) translateY(var(--label-offset)) rotate(${-seg.angle}deg);"><span>${seg.icon}</span><span>${seg.wheelText || seg.label}</span></span>`).join('')}</div>
           </div>
-          <button id="wheelSpinBtn" class="secondary-btn" type="button" ${wheelDisabled ? 'disabled' : ''}>${spentSpin ? '本轮已抽过' : '转一次 10金币'}</button>
+          <button id="wheelSpinBtn" class="secondary-btn" type="button" ${wheelDisabled ? 'disabled' : ''}>${spentSpin ? '本轮已抽过' : `转一次 ${WHEEL_COST}金币`}</button>
           ${wheelDisableReason ? `<p class="stage-text" style="margin-top:8px">${wheelDisableReason}</p>` : ''}
           <div id="wheelResult" class="wheel-result" hidden></div>
           <div class="report-next">
@@ -2446,14 +2447,14 @@
       function spinWheel() {
         if (state.phase !== 'wheel' || state.wheelSpinning) return;
         if (state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION) { toast('这一轮的抽奖机会已经用掉了。'); return; }
+        if (state.money < 0) { toast('总金币是负数，暂时不能玩轮盘。'); return; }
+        if (state.money < WHEEL_COST) { toast(`金币不足${WHEEL_COST}，无法转轮盘。`); return; }
         state.wheelSpinsThisShop += 1;
-        if (state.money < 0) { toast('总现金是负数，暂时不能玩轮盘。'); return; }
-        if (state.money < 10) { toast('现金不足10金币，无法转轮盘。'); return; }
         const before = state.money;
-        state.money -= 10;
-        state.pendingLedger.push({ label: '幸运轮盘费用', value: -10, equation: `${cash(before)} − 10金币 = ${cash(state.money)}` });
+        state.money -= WHEEL_COST;
+        state.pendingLedger.push({ label: '幸运轮盘费用', value: -WHEEL_COST, equation: `${cash(before)} − ${WHEEL_COST}金币 = ${cash(state.money)}` });
         updateHUD();
-        flashDelta(-10);
+        flashDelta(-WHEEL_COST);
         state.wheelSpinning = true;
         const spinBtn = $('#wheelSpinBtn');
         if (spinBtn) spinBtn.disabled = true;
@@ -2511,8 +2512,8 @@
         const spinBtn = $('#wheelSpinBtn');
         if (spinBtn) {
           const spent = state.wheelSpinsThisShop >= WHEEL_SPINS_PER_SESSION;
-          spinBtn.disabled = spent || state.money < 10;
-          spinBtn.textContent = spent ? '本轮已抽过' : '转一次 10金币';
+          spinBtn.disabled = spent || state.money < WHEEL_COST;
+          spinBtn.textContent = spent ? '本轮已抽过' : `转一次 ${WHEEL_COST}金币`;
         }
         updateHUD();
       }
