@@ -1277,6 +1277,8 @@
         return state.audio;
       }
 
+      const MASTER_VOLUME = 3.2;
+
       function beep(freq = 440, duration = .1, type = 'sine', volume = .045) {
         const ctx = ensureAudio();
         if (!ctx) return;
@@ -1284,7 +1286,7 @@
         const gain = ctx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.setValueAtTime(Math.min(.9, volume * MASTER_VOLUME), ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + duration);
         osc.connect(gain).connect(ctx.destination);
         osc.start();
@@ -1301,7 +1303,7 @@
         osc.frequency.setValueAtTime(freq, t0);
         if (sweepTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, sweepTo), t0 + duration);
         gain.gain.setValueAtTime(.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(volume, t0 + .012);
+        gain.gain.exponentialRampToValueAtTime(Math.min(.9, volume * MASTER_VOLUME), t0 + .012);
         gain.gain.exponentialRampToValueAtTime(.0001, t0 + duration);
         osc.connect(gain).connect(ctx.destination);
         osc.start(t0);
@@ -1322,7 +1324,7 @@
         filter.type = 'bandpass';
         filter.frequency.value = filterFreq;
         const gain = ctx.createGain();
-        gain.gain.value = volume;
+        gain.gain.value = Math.min(.9, volume * MASTER_VOLUME);
         src.connect(filter).connect(gain).connect(ctx.destination);
         src.start(t0);
       }
