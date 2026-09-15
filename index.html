@@ -1025,6 +1025,8 @@
       const POTION_LIMIT = 2;
       const WHEEL_SPINS_PER_SESSION = 1;
       const WHEEL_COST = 5;
+      // 课堂版开关：true = 全部不计时，老师带着做（打包 v2 时会改成 true）
+      const NO_TIMER = false;
 
       const jobs = [
         {
@@ -1445,6 +1447,7 @@
 
       function startPhaseTimer(phaseKey, onExpire) {
         clearInterval(state.timerId);
+        if (NO_TIMER) { stopPhaseTimer('⏸ 不计时'); return; }
         let seconds = PHASE_SECONDS[phaseKey] || 30;
         state.timer = seconds;
         setTimerText();
@@ -1588,7 +1591,7 @@
           <div class="question-box">
             <p class="story">${q.story}</p>
             <p class="equation">${mathNumber(q.a)} ${q.op} ${operatorNumber(q.b)} = ?</p>
-            <div class="answers">${q.options.map(v => `<button class="answer-btn" type="button" data-answer="${v}">${v}</button>`).join('')}</div>
+            <div class="answers">${q.options.map(v => `<button class="answer-btn" type="button" data-answer="${v}">${mathNumber(v)}</button>`).join('')}</div>
           </div>
           <div id="feedback" class="feedback">请选择一个答案。</div>`;
 
@@ -1861,6 +1864,11 @@
           </div>`;
         $('#nextSessionBtn').addEventListener('click', nextSession);
         clearInterval(state.reportTimerId);
+        if (NO_TIMER) {
+          const auto = document.querySelector('.auto-next');
+          if (auto) auto.textContent = '⏸ 不计时，等老师说了再按';
+          return;
+        }
         state.timer = state.reportSeconds;
         setTimerText();
         state.reportTimerId = setInterval(() => {
